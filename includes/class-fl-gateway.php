@@ -202,8 +202,8 @@ class FL_Gateway extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->id                 = 'forgelayer';
 		$this->has_fields         = true;
-		$this->method_title       = __( 'ForgeLayer Crypto Payments', 'forgelayer-woocommerce' );
-		$this->method_description = __( 'Accept Bitcoin, Ethereum (ERC-20), BNB Smart Chain (BEP-20), and Tron (TRC-20) payments via ForgeLayer.', 'forgelayer-woocommerce' );
+		$this->method_title       = __( 'ForgeLayer Crypto Payments', 'forgelayer-crypto-payments-for-woocommerce' );
+		$this->method_description = __( 'Accept Bitcoin, Ethereum (ERC-20), BNB Smart Chain (BEP-20), and Tron (TRC-20) payments via ForgeLayer.', 'forgelayer-crypto-payments-for-woocommerce' );
 		$this->supports           = array( 'products' );
 
 		$this->init_form_fields();
@@ -274,7 +274,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			$supported = implode( ', ', FL_Price::SUPPORTED_CURRENCIES );
 			echo '<div class="notice notice-error"><p>'
 				. sprintf(
-					wp_kses_post( __( '<strong>ForgeLayer Payments</strong> is enabled but your store currency <strong>%1$s</strong> is not supported. The gateway will be hidden at checkout. Supported currencies: %2$s', 'forgelayer-woocommerce' ) ),
+					wp_kses_post( __( '<strong>ForgeLayer Payments</strong> is enabled but your store currency <strong>%1$s</strong> is not supported. The gateway will be hidden at checkout. Supported currencies: %2$s', 'forgelayer-crypto-payments-for-woocommerce' ) ),
 					esc_html( $currency ),
 					esc_html( $supported )
 				)
@@ -284,7 +284,11 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( empty( $this->get_enabled_options() ) ) {
 			echo '<div class="notice notice-warning"><p>'
-				. wp_kses_post( __( '<strong>ForgeLayer Payments</strong> is enabled but no chains or tokens are active. Go to <a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=forgelayer' ) ) . '">ForgeLayer settings</a>, enable at least one chain and save.', 'forgelayer-woocommerce' ) )
+				. wp_kses_post( sprintf(
+					/* translators: %s: URL to ForgeLayer settings page */
+					__( '<strong>ForgeLayer Payments</strong> is enabled but no chains or tokens are active. Go to <a href="%s">ForgeLayer settings</a>, enable at least one chain and save.', 'forgelayer-crypto-payments-for-woocommerce' ),
+					esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=forgelayer' ) )
+				) )
 				. '</p></div>';
 		}
 
@@ -292,14 +296,14 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$sub_error = get_transient( 'fl_subscription_error' );
 		if ( ! empty( $sub_error['code'] ) ) {
 			$notices = array(
-				'LIMIT_EXCEEDED'       => __( 'Address limit reached. New addresses cannot be generated. Address reuse may still work.', 'forgelayer-woocommerce' ),
-				'SUBSCRIPTION_EXPIRED' => __( 'Subscription expired. Cryptocurrency checkout is fully blocked. Renew at forgelayer.io/dashboard/billing.', 'forgelayer-woocommerce' ),
-				'SUBSCRIPTION_PENDING' => __( 'Subscription pending payment. Cryptocurrency checkout is blocked. Complete payment at forgelayer.io/dashboard/billing.', 'forgelayer-woocommerce' ),
-				'NO_SUBSCRIPTION'      => __( 'No active ForgeLayer subscription. Cryptocurrency checkout is blocked. Subscribe at forgelayer.io/dashboard/billing.', 'forgelayer-woocommerce' ),
+				'LIMIT_EXCEEDED'       => __( 'Address limit reached. New addresses cannot be generated. Address reuse may still work.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'SUBSCRIPTION_EXPIRED' => __( 'Subscription expired. Cryptocurrency checkout is fully blocked. Renew at forgelayer.io/dashboard/billing.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'SUBSCRIPTION_PENDING' => __( 'Subscription pending payment. Cryptocurrency checkout is blocked. Complete payment at forgelayer.io/dashboard/billing.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'NO_SUBSCRIPTION'      => __( 'No active ForgeLayer subscription. Cryptocurrency checkout is blocked. Subscribe at forgelayer.io/dashboard/billing.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			);
 			$notice_text = isset( $notices[ $sub_error['code'] ] ) ? $notices[ $sub_error['code'] ] : sanitize_text_field( $sub_error['message'] );
 			echo '<div class="notice notice-error"><p>'
-				. '<strong>' . esc_html__( 'ForgeLayer:', 'forgelayer-woocommerce' ) . '</strong> '
+				. '<strong>' . esc_html__( 'ForgeLayer:', 'forgelayer-crypto-payments-for-woocommerce' ) . '</strong> '
 				. esc_html( $notice_text )
 				. '</p></div>';
 		}
@@ -312,9 +316,9 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		$settings_url  = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=forgelayer' );
 		$resource_labels = array(
-			'addresses'   => __( 'Wallet Addresses', 'forgelayer-woocommerce' ),
-			'webhooks'    => __( 'Webhooks', 'forgelayer-woocommerce' ),
-			'apiRequests' => __( 'API Requests', 'forgelayer-woocommerce' ),
+			'addresses'   => __( 'Wallet Addresses', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'webhooks'    => __( 'Webhooks', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'apiRequests' => __( 'API Requests', 'forgelayer-crypto-payments-for-woocommerce' ),
 		);
 
 		foreach ( $resource_labels as $key => $label ) {
@@ -326,16 +330,16 @@ class FL_Gateway extends WC_Payment_Gateway {
 			if ( $pct >= 100 ) {
 				echo '<div class="notice notice-error"><p>'
 					. sprintf(
-						wp_kses_post( __( '<strong>ForgeLayer: %1$s limit reached (100%%).</strong> %2$s Go to <a href="%3$s">ForgeLayer settings</a> or upgrade your plan.', 'forgelayer-woocommerce' ) ),
+						wp_kses_post( __( '<strong>ForgeLayer: %1$s limit reached (100%%).</strong> %2$s Go to <a href="%3$s">ForgeLayer settings</a> or upgrade your plan.', 'forgelayer-crypto-payments-for-woocommerce' ) ),
 						esc_html( $label ),
-						$key === 'apiRequests' ? esc_html__( 'Cryptocurrency checkout is disabled until this resets.', 'forgelayer-woocommerce' ) : esc_html__( 'New resources cannot be created until this resets.', 'forgelayer-woocommerce' ),
+						$key === 'apiRequests' ? esc_html__( 'Cryptocurrency checkout is disabled until this resets.', 'forgelayer-crypto-payments-for-woocommerce' ) : esc_html__( 'New resources cannot be created until this resets.', 'forgelayer-crypto-payments-for-woocommerce' ),
 						esc_url( $settings_url )
 					)
 					. '</p></div>';
 			} elseif ( $pct >= 90 ) {
 				echo '<div class="notice notice-warning"><p>'
 					. sprintf(
-						wp_kses_post( __( '<strong>ForgeLayer: %1$s at %2$d%%.</strong> Approaching your plan limit. <a href="%3$s">View usage</a> or upgrade your plan before customers are affected.', 'forgelayer-woocommerce' ) ),
+						wp_kses_post( __( '<strong>ForgeLayer: %1$s at %2$d%%.</strong> Approaching your plan limit. <a href="%3$s">View usage</a> or upgrade your plan before customers are affected.', 'forgelayer-crypto-payments-for-woocommerce' ) ),
 						esc_html( $label ),
 						$pct,
 						esc_url( $settings_url )
@@ -344,7 +348,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			} else {
 				echo '<div class="notice notice-warning" style="border-left-color:#d97706"><p>'
 					. sprintf(
-						wp_kses_post( __( '<strong>ForgeLayer: %1$s at %2$d%%.</strong> <a href="%3$s">View usage</a>.', 'forgelayer-woocommerce' ) ),
+						wp_kses_post( __( '<strong>ForgeLayer: %1$s at %2$d%%.</strong> <a href="%3$s">View usage</a>.', 'forgelayer-crypto-payments-for-woocommerce' ) ),
 						esc_html( $label ),
 						$pct,
 						esc_url( $settings_url )
@@ -363,19 +367,19 @@ class FL_Gateway extends WC_Payment_Gateway {
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc" style="vertical-align:top;padding-top:14px">
-				<?php esc_html_e( 'Usage Overview', 'forgelayer-woocommerce' ); ?>
+				<?php esc_html_e( 'Usage Overview', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 			</th>
 			<td class="forminp">
 		<?php if ( empty( $api_key ) ) : ?>
-				<p class="description"><?php esc_html_e( 'Enter and save your API key to see usage.', 'forgelayer-woocommerce' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Enter and save your API key to see usage.', 'forgelayer-crypto-payments-for-woocommerce' ); ?></p>
 		<?php else : ?>
 				<?php
 				// Render the three resource rows as a static skeleton.
 				// JS fills in live values on page load via AJAX.
 				$resource_defs = array(
-					'addresses'   => __( 'Wallet Addresses', 'forgelayer-woocommerce' ),
-					'webhooks'    => __( 'Webhooks', 'forgelayer-woocommerce' ),
-					'apiRequests' => __( 'API Requests', 'forgelayer-woocommerce' ),
+					'addresses'   => __( 'Wallet Addresses', 'forgelayer-crypto-payments-for-woocommerce' ),
+					'webhooks'    => __( 'Webhooks', 'forgelayer-crypto-payments-for-woocommerce' ),
+					'apiRequests' => __( 'API Requests', 'forgelayer-crypto-payments-for-woocommerce' ),
 				);
 				?>
 				<div id="fl-usage-grid" style="max-width:480px">
@@ -384,7 +388,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 						<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
 							<strong><?php echo esc_html( $res_label ); ?></strong>
 							<span id="fl-usage-count-<?php echo esc_attr( $res_key ); ?>" style="color:#6b7280">
-								<?php esc_html_e( 'Loading…', 'forgelayer-woocommerce' ); ?>
+								<?php esc_html_e( 'Loading…', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 							</span>
 						</div>
 						<div style="background:#e5e7eb;border-radius:4px;height:8px;overflow:hidden">
@@ -405,7 +409,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 				<button type="button" id="fl-refresh-usage" class="button button-secondary"
 				        style="margin-top:8px" <?php echo empty( $api_key ) ? 'disabled' : ''; ?>>
-					<?php esc_html_e( 'Refresh Usage', 'forgelayer-woocommerce' ); ?>
+					<?php esc_html_e( 'Refresh Usage', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 				</button>
 				<span id="fl-usage-status" style="margin-left:10px;font-style:italic;color:#6b7280"></span>
 			</td>
@@ -423,13 +427,13 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( ! FL_Price::is_currency_supported( $currency ) ) {
 			$msg = sprintf(
-				__( 'Store currency <strong>%s</strong> is not supported. Supported currencies: %s', 'forgelayer-woocommerce' ),
+				__( 'Store currency <strong>%s</strong> is not supported. Supported currencies: %s', 'forgelayer-crypto-payments-for-woocommerce' ),
 				esc_html( $currency ),
 				esc_html( implode( ', ', FL_Price::SUPPORTED_CURRENCIES ) )
 			);
 			$color = '#b00';
 		} elseif ( ! $info['updated'] ) {
-			$msg   = __( 'Not yet cached. Prices will be fetched on the next WP-Cron run or on the first order.', 'forgelayer-woocommerce' );
+			$msg   = __( 'Not yet cached. Prices will be fetched on the next WP-Cron run or on the first order.', 'forgelayer-crypto-payments-for-woocommerce' );
 			$color = '#996600';
 		} else {
 			$age              = $info['age'];
@@ -440,7 +444,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 			if ( $currency_mismatch ) {
 				$msg   = sprintf(
-					__( 'Cache currency (%1$s) does not match store currency (%2$s). Prices are being refreshed for %2$s now.', 'forgelayer-woocommerce' ),
+					__( 'Cache currency (%1$s) does not match store currency (%2$s). Prices are being refreshed for %2$s now.', 'forgelayer-crypto-payments-for-woocommerce' ),
 					esc_html( $cache_currency ),
 					esc_html( $store_currency )
 				);
@@ -450,7 +454,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			} else {
 				$msg = sprintf(
 					/* translators: 1: coin count, 2: currency, 3: age, 4: TTL seconds */
-					__( '%1$d coin prices cached in %2$s &mdash; refreshed %3$s ago &mdash; refresh interval: %4$ss.', 'forgelayer-woocommerce' ),
+					__( '%1$d coin prices cached in %2$s &mdash; refreshed %3$s ago &mdash; refresh interval: %4$ss.', 'forgelayer-crypto-payments-for-woocommerce' ),
 					$info['count'],
 					esc_html( $cache_currency ),
 					esc_html( human_time_diff( $info['updated'] ) ),
@@ -464,7 +468,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc">
-				<?php esc_html_e( 'Price Cache', 'forgelayer-woocommerce' ); ?>
+				<?php esc_html_e( 'Price Cache', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 			</th>
 			<td class="forminp" style="color:<?php echo esc_attr( $color ); ?>">
 				<?php echo wp_kses_post( $msg ); ?>
@@ -640,130 +644,130 @@ class FL_Gateway extends WC_Payment_Gateway {
 	public function init_form_fields() {
 		$fields = array(
 			'enabled' => array(
-				'title'   => __( 'Enable / Disable', 'forgelayer-woocommerce' ),
+				'title'   => __( 'Enable / Disable', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Enable ForgeLayer Crypto Payments', 'forgelayer-woocommerce' ),
+				'label'   => __( 'Enable ForgeLayer Crypto Payments', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default' => 'no',
 			),
 			'title' => array(
-				'title'       => __( 'Title', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Title', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => __( 'Payment method name shown to customers at checkout.', 'forgelayer-woocommerce' ),
-				'default'     => __( 'Pay with Cryptocurrency', 'forgelayer-woocommerce' ),
+				'description' => __( 'Payment method name shown to customers at checkout.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'default'     => __( 'Pay with Cryptocurrency', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'desc_tip'    => true,
 			),
 			'description' => array(
-				'title'       => __( 'Description', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Description', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'textarea',
-				'default'     => __( 'Pay securely using Bitcoin, Ethereum, BNB, or Tron. A unique wallet address will be generated for your order.', 'forgelayer-woocommerce' ),
+				'default'     => __( 'Pay securely using Bitcoin, Ethereum, BNB, or Tron. A unique wallet address will be generated for your order.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 
 			// ---- API ----
 			'api_section' => array(
-				'title' => __( 'ForgeLayer API', 'forgelayer-woocommerce' ),
+				'title' => __( 'ForgeLayer API', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'title',
 			),
 			'api_key' => array(
-				'title'       => __( 'API Key', 'forgelayer-woocommerce' ),
+				'title'       => __( 'API Key', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'password',
-				'description' => __( 'Your ForgeLayer API key. Found in your ForgeLayer dashboard under API Settings. Stored in the WordPress options table — restrict admin access and protect database backups accordingly.', 'forgelayer-woocommerce' ),
+				'description' => __( 'Your ForgeLayer API key. Found in your ForgeLayer dashboard under API Settings. Stored in the WordPress options table — restrict admin access and protect database backups accordingly.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'     => '',
 				'desc_tip'    => true,
 			),
 			'test_mode' => array(
-				'title'   => __( 'Sandbox / Test Mode', 'forgelayer-woocommerce' ),
+				'title'   => __( 'Sandbox / Test Mode', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Enable sandbox mode (use a test API key starting with flk_test_)', 'forgelayer-woocommerce' ),
+				'label'   => __( 'Enable sandbox mode (use a test API key starting with flk_test_)', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default' => 'yes',
 			),
 
 			// ---- Price refresh interval ----
 			'price_refresh_interval' => array(
-				'title'       => __( 'Price Refresh Interval', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Price Refresh Interval', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'select',
-				'description' => __( 'How often WP-Cron refreshes cryptocurrency prices in the background. Prices are cached in the database — checkout never calls CoinGecko directly. Crypto prices are stable over minutes; 5 minutes matches industry standard (BitPay, Coinbase Commerce).', 'forgelayer-woocommerce' ),
+				'description' => __( 'How often WP-Cron refreshes cryptocurrency prices in the background. Prices are cached in the database — checkout never calls CoinGecko directly. Crypto prices are stable over minutes; 5 minutes matches industry standard (BitPay, Coinbase Commerce).', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '300',
 				'options'     => array(
-					'60'  => __( '1 minute', 'forgelayer-woocommerce' ),
-					'120' => __( '2 minutes', 'forgelayer-woocommerce' ),
-					'300' => __( '5 minutes (Recommended)', 'forgelayer-woocommerce' ),
-					'600' => __( '10 minutes', 'forgelayer-woocommerce' ),
-					'900' => __( '15 minutes', 'forgelayer-woocommerce' ),
+					'60'  => __( '1 minute', 'forgelayer-crypto-payments-for-woocommerce' ),
+					'120' => __( '2 minutes', 'forgelayer-crypto-payments-for-woocommerce' ),
+					'300' => __( '5 minutes (Recommended)', 'forgelayer-crypto-payments-for-woocommerce' ),
+					'600' => __( '10 minutes', 'forgelayer-crypto-payments-for-woocommerce' ),
+					'900' => __( '15 minutes', 'forgelayer-crypto-payments-for-woocommerce' ),
 				),
 			),
 
 			// ---- Account usage ----
 			'account_usage_section' => array(
-				'title'       => __( 'Account Usage', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Account Usage', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Live usage against your ForgeLayer plan limits. Refreshes every 30 minutes in the background. You will receive an email and see a notice here when any resource reaches 80%.', 'forgelayer-woocommerce' ),
+				'description' => __( 'Live usage against your ForgeLayer plan limits. Refreshes every 30 minutes in the background. You will receive an email and see a notice here when any resource reaches 80%.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 			'account_usage' => array(
-				'title' => __( 'Usage Overview', 'forgelayer-woocommerce' ),
+				'title' => __( 'Usage Overview', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'account_usage',
 			),
 
 			// ---- Price cache status ----
 			'price_cache_status' => array(
-				'title' => __( 'Price Cache', 'forgelayer-woocommerce' ),
+				'title' => __( 'Price Cache', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'price_cache_status',
 			),
 
 			// ---- Payment ----
 			'payment_section' => array(
-				'title' => __( 'Payment Settings', 'forgelayer-woocommerce' ),
+				'title' => __( 'Payment Settings', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'title',
 			),
 			'payment_window' => array(
-				'title'             => __( 'Payment Window (minutes)', 'forgelayer-woocommerce' ),
+				'title'             => __( 'Payment Window (minutes)', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'              => 'number',
-				'description'       => __( 'Minutes the customer has to send payment before the order is cancelled.', 'forgelayer-woocommerce' ),
+				'description'       => __( 'Minutes the customer has to send payment before the order is cancelled.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'           => '30',
 				'desc_tip'          => true,
 				'custom_attributes' => array( 'min' => '5', 'max' => '1440', 'step' => '1' ),
 			),
 			'accept_late_payments' => array(
-				'title'       => __( 'Accept Late Payments', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Accept Late Payments', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'label'       => __( 'Reopen and fulfil orders when payment arrives after the window expires', 'forgelayer-woocommerce' ),
-				'description' => __( 'Blockchain addresses never expire — funds sent after the window are received in your ForgeLayer wallet regardless. Enabling this automatically reopens the cancelled order when ForgeLayer confirms the deposit. Recommended: ON.', 'forgelayer-woocommerce' ),
+				'label'       => __( 'Reopen and fulfil orders when payment arrives after the window expires', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'description' => __( 'Blockchain addresses never expire — funds sent after the window are received in your ForgeLayer wallet regardless. Enabling this automatically reopens the cancelled order when ForgeLayer confirms the deposit. Recommended: ON.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'     => 'yes',
 			),
 			'late_payment_grace' => array(
-				'title'             => __( 'Late Payment Grace Period (minutes)', 'forgelayer-woocommerce' ),
+				'title'             => __( 'Late Payment Grace Period (minutes)', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'              => 'number',
-				'description'       => __( 'How many minutes after the payment window expires you still want to auto-reopen the order. Payments arriving later than this are held for manual review — you receive an admin email to decide. Set to 0 to always require manual review for any late payment.', 'forgelayer-woocommerce' ),
+				'description'       => __( 'How many minutes after the payment window expires you still want to auto-reopen the order. Payments arriving later than this are held for manual review — you receive an admin email to decide. Set to 0 to always require manual review for any late payment.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'           => '60',
 				'desc_tip'          => true,
 				'custom_attributes' => array( 'min' => '0', 'max' => '10080', 'step' => '1' ),
 			),
 			'reuse_addresses' => array(
-				'title'       => __( 'Reuse Inactive Addresses', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Reuse Inactive Addresses', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'label'       => __( 'Reuse addresses from completed or cancelled orders instead of generating a new one each time', 'forgelayer-woocommerce' ),
-				'description' => __( 'When enabled, the plugin first checks for an existing address on the same chain that is no longer active. Only generates a new address if none is available. The previous balance is snapshotted so old funds never trigger a false confirmation.', 'forgelayer-woocommerce' ),
+				'label'       => __( 'Reuse addresses from completed or cancelled orders instead of generating a new one each time', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'description' => __( 'When enabled, the plugin first checks for an existing address on the same chain that is no longer active. Only generates a new address if none is available. The previous balance is snapshotted so old funds never trigger a false confirmation.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'     => 'no',
 			),
 
 			// ---- Rate limiting ----
 			'rate_section' => array(
-				'title'       => __( 'Traffic & Rate Limiting', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Traffic & Rate Limiting', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Configure request limits to balance security against high-traffic tolerance. Increase these values for busy stores, B2B merchants, or sites behind a CDN/proxy where many customers share one IP address.', 'forgelayer-woocommerce' ),
+				'description' => __( 'Configure request limits to balance security against high-traffic tolerance. Increase these values for busy stores, B2B merchants, or sites behind a CDN/proxy where many customers share one IP address.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 			'rate_poll_interval' => array(
-				'title'             => __( 'Payment Status Poll Interval (seconds)', 'forgelayer-woocommerce' ),
+				'title'             => __( 'Payment Status Poll Interval (seconds)', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'              => 'number',
-				'description'       => __( 'Minimum seconds between payment status checks per customer. Lower = more responsive confirmation. Higher = less server load. Recommended: 10.', 'forgelayer-woocommerce' ),
+				'description'       => __( 'Minimum seconds between payment status checks per customer. Lower = more responsive confirmation. Higher = less server load. Recommended: 10.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'           => '10',
 				'desc_tip'          => true,
 				'custom_attributes' => array( 'min' => '5', 'max' => '60', 'step' => '1' ),
 			),
 			'rate_lockout_threshold' => array(
-				'title'             => __( 'Brute-Force Lockout Threshold', 'forgelayer-woocommerce' ),
+				'title'             => __( 'Brute-Force Lockout Threshold', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'              => 'number',
-				'description'       => __( 'Number of failed payment status attempts before an IP is temporarily locked out for that order. Increase for shared-IP environments (offices, CDNs). Each customer\'s lockout is scoped to their own order — one bad actor cannot block others. Recommended: 10.', 'forgelayer-woocommerce' ),
+				'description'       => __( 'Number of failed payment status attempts before an IP is temporarily locked out for that order. Increase for shared-IP environments (offices, CDNs). Each customer\'s lockout is scoped to their own order — one bad actor cannot block others. Recommended: 10.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'           => '10',
 				'desc_tip'          => true,
 				'custom_attributes' => array( 'min' => '3', 'max' => '100', 'step' => '1' ),
@@ -771,60 +775,60 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 			// ---- Webhook ----
 			'webhook_section' => array(
-				'title'       => __( 'Webhook Configuration', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Webhook Configuration', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Webhooks give instant payment confirmation without polling. ForgeLayer sends a signed POST to your site whenever a deposit is confirmed.', 'forgelayer-woocommerce' ),
+				'description' => __( 'Webhooks give instant payment confirmation without polling. ForgeLayer sends a signed POST to your site whenever a deposit is confirmed.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 			'webhook_url_display' => array(
-				'title' => __( 'Your Webhook URL', 'forgelayer-woocommerce' ),
+				'title' => __( 'Your Webhook URL', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'webhook_url_display',
 			),
 			'webhook_secret' => array(
-				'title'       => __( 'Webhook Secret', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Webhook Secret', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'password',
-				'description' => __( 'HMAC-SHA256 key used to verify payloads from ForgeLayer. Auto-filled when you click "Setup Webhook" below.', 'forgelayer-woocommerce' ),
+				'description' => __( 'HMAC-SHA256 key used to verify payloads from ForgeLayer. Auto-filled when you click "Setup Webhook" below.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'     => '',
 				'desc_tip'    => true,
 			),
 			'webhook_confirmation_levels' => array(
-				'title'             => __( 'Required Confirmations', 'forgelayer-woocommerce' ),
+				'title'             => __( 'Required Confirmations', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'              => 'number',
-				'description'       => __( 'Number of on-chain confirmations before ForgeLayer fires the deposit_confirmed event.', 'forgelayer-woocommerce' ),
+				'description'       => __( 'Number of on-chain confirmations before ForgeLayer fires the deposit_confirmed event.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'           => '1',
 				'desc_tip'          => true,
 				'custom_attributes' => array( 'min' => '1', 'max' => '100', 'step' => '1' ),
 			),
 			'webhook_setup' => array(
-				'title' => __( 'Register Webhook', 'forgelayer-woocommerce' ),
+				'title' => __( 'Register Webhook', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'webhook_setup_button',
 			),
 
 			// ---- Supported tokens reference ----
 			'supported_tokens_section' => array(
-				'title'       => __( 'Supported Tokens for Price Conversion', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Supported Tokens for Price Conversion', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'These tokens have automatic price conversion via CoinGecko. Add any of them to your ForgeLayer account and they will work out of the box. Tokens outside this list will show the order total in fiat at checkout.', 'forgelayer-woocommerce' ),
+				'description' => __( 'These tokens have automatic price conversion via CoinGecko. Add any of them to your ForgeLayer account and they will work out of the box. Tokens outside this list will show the order total in fiat at checkout.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 			'supported_tokens_list' => array(
-				'title' => __( 'Token Directory', 'forgelayer-woocommerce' ),
+				'title' => __( 'Token Directory', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'supported_tokens_list',
 			),
 			'custom_coingecko_ids' => array(
-				'title'       => __( 'Custom CoinGecko IDs', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Custom CoinGecko IDs', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'textarea',
-				'description' => __( 'For tokens not in the directory above, add their CoinGecko IDs here. One per line: <code>SYMBOL|coingecko-id</code><br>Example: <code>MYTOKEN|my-token-coingecko-id</code><br>Find IDs at coingecko.com — it\'s the slug in the URL (e.g. coingecko.com/en/coins/<strong>shiba-inu</strong>).', 'forgelayer-woocommerce' ),
+				'description' => __( 'For tokens not in the directory above, add their CoinGecko IDs here. One per line: <code>SYMBOL|coingecko-id</code><br>Example: <code>MYTOKEN|my-token-coingecko-id</code><br>Find IDs at coingecko.com — it\'s the slug in the URL (e.g. coingecko.com/en/coins/<strong>shiba-inu</strong>).', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'     => '',
 				'desc_tip'    => false,
 			),
 
 			// ---- Token refresh ----
 			'token_section' => array(
-				'title'       => __( 'Supported Chains & Tokens', 'forgelayer-woocommerce' ),
+				'title'       => __( 'Supported Chains & Tokens', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => __( 'Tokens are fetched directly from your ForgeLayer account. Click <strong>Refresh Token List</strong> after adding or removing tokens in your ForgeLayer dashboard.', 'forgelayer-woocommerce' ),
+				'description' => __( 'Tokens are fetched directly from your ForgeLayer account. Click <strong>Refresh Token List</strong> after adding or removing tokens in your ForgeLayer dashboard.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 			'token_refresh' => array(
-				'title' => __( 'Token List', 'forgelayer-woocommerce' ),
+				'title' => __( 'Token List', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'type'  => 'token_refresh_button',
 			),
 		);
@@ -832,9 +836,9 @@ class FL_Gateway extends WC_Payment_Gateway {
 		// Per-chain: enable toggle + native coin + fetched tokens
 		foreach ( self::$chains as $chain_id => $chain ) {
 			$fields[ "chain_{$chain_id}_enabled" ] = array(
-				'title'   => sprintf( __( 'Enable %s', 'forgelayer-woocommerce' ), $chain['label'] ),
+				'title'   => sprintf( __( 'Enable %s', 'forgelayer-crypto-payments-for-woocommerce' ), $chain['label'] ),
 				'type'    => 'checkbox',
-				'label'   => sprintf( __( 'Accept payments on the %s network', 'forgelayer-woocommerce' ), $chain['label'] ),
+				'label'   => sprintf( __( 'Accept payments on the %s network', 'forgelayer-crypto-payments-for-woocommerce' ), $chain['label'] ),
 				'default' => 'no',
 			);
 
@@ -843,7 +847,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			$fields[ "token_{$chain_id}_native" ] = array(
 				'title'   => sprintf( '%s (%s)', $n['name'], $n['symbol'] ),
 				'type'    => 'checkbox',
-				'label'   => sprintf( __( 'Accept %s (native coin)', 'forgelayer-woocommerce' ), $n['symbol'] ),
+				'label'   => sprintf( __( 'Accept %s (native coin)', 'forgelayer-crypto-payments-for-woocommerce' ), $n['symbol'] ),
 				'default' => 'yes',
 			);
 
@@ -859,7 +863,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 				$fields[ "token_{$chain_id}_{$safe_key}" ] = array(
 					'title'   => esc_html( $name ),
 					'type'    => 'checkbox',
-					'label'   => sprintf( __( 'Accept %s', 'forgelayer-woocommerce' ), esc_html( $symbol ) ),
+					'label'   => sprintf( __( 'Accept %s', 'forgelayer-crypto-payments-for-woocommerce' ), esc_html( $symbol ) ),
 					'default' => 'yes',
 				);
 			}
@@ -878,8 +882,8 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$has_key     = (bool) $this->get_option( 'api_key' );
 		$last_synced = get_option( 'fl_tokens_last_synced', 0 );
 		$synced_msg  = $last_synced
-			? sprintf( __( 'Last synced: %s', 'forgelayer-woocommerce' ), esc_html( human_time_diff( $last_synced ) . ' ago' ) )
-			: __( 'Not synced yet.', 'forgelayer-woocommerce' );
+			? sprintf( __( 'Last synced: %s', 'forgelayer-crypto-payments-for-woocommerce' ), esc_html( human_time_diff( $last_synced ) . ' ago' ) )
+			: __( 'Not synced yet.', 'forgelayer-crypto-payments-for-woocommerce' );
 
 		ob_start();
 		?>
@@ -890,17 +894,17 @@ class FL_Gateway extends WC_Payment_Gateway {
 			<td class="forminp">
 				<?php if ( ! $has_key ) : ?>
 					<p class="description">
-						<?php esc_html_e( 'Enter and save your API key above, then click Refresh to load your ForgeLayer tokens.', 'forgelayer-woocommerce' ); ?>
+						<?php esc_html_e( 'Enter and save your API key above, then click Refresh to load your ForgeLayer tokens.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 					</p>
 				<?php else : ?>
 					<button type="button" id="fl-refresh-tokens" class="button button-secondary">
-						<?php esc_html_e( 'Refresh Token List', 'forgelayer-woocommerce' ); ?>
+						<?php esc_html_e( 'Refresh Token List', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 					</button>
 					<span id="fl-refresh-status" style="margin-left:10px;font-style:italic;color:#666">
 						<?php echo esc_html( $synced_msg ); ?>
 					</span>
 					<p class="description" style="margin-top:6px">
-						<?php esc_html_e( 'Fetches the latest tokens from your ForgeLayer account for all chains. The page will reload to update the token checkboxes below.', 'forgelayer-woocommerce' ); ?>
+						<?php esc_html_e( 'Fetches the latest tokens from your ForgeLayer account for all chains. The page will reload to update the token checkboxes below.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 					</p>
 				<?php endif; ?>
 			</td>
@@ -925,21 +929,21 @@ class FL_Gateway extends WC_Payment_Gateway {
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc" style="vertical-align:top;padding-top:14px">
-				<?php esc_html_e( 'Token Directory', 'forgelayer-woocommerce' ); ?>
+				<?php esc_html_e( 'Token Directory', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 			</th>
 			<td class="forminp">
 				<input type="text" id="fl-token-search"
-				       placeholder="<?php esc_attr_e( 'Search tokens…', 'forgelayer-woocommerce' ); ?>"
+				       placeholder="<?php esc_attr_e( 'Search tokens…', 'forgelayer-crypto-payments-for-woocommerce' ); ?>"
 				       style="width:240px;margin-bottom:10px;padding:5px 8px;border:1px solid #ddd;border-radius:4px">
 
 				<table id="fl-token-table"
 				       style="border-collapse:collapse;width:100%;max-width:680px;font-size:13px">
 					<thead>
 						<tr style="background:#f9f9f9;border-bottom:2px solid #e0e0e0">
-							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Symbol', 'forgelayer-woocommerce' ); ?></th>
-							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Token Name', 'forgelayer-woocommerce' ); ?></th>
-							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Networks', 'forgelayer-woocommerce' ); ?></th>
-							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Price', 'forgelayer-woocommerce' ); ?></th>
+							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Symbol', 'forgelayer-crypto-payments-for-woocommerce' ); ?></th>
+							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Token Name', 'forgelayer-crypto-payments-for-woocommerce' ); ?></th>
+							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Networks', 'forgelayer-crypto-payments-for-woocommerce' ); ?></th>
+							<th style="padding:7px 10px;text-align:left"><?php esc_html_e( 'Price', 'forgelayer-crypto-payments-for-woocommerce' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -974,7 +978,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 				<p class="description" style="margin-top:10px;max-width:680px">
 					<?php
 					printf(
-						wp_kses_post( __( '<strong>%d tokens</strong> supported. To add a token not listed here, first add it in your <a href="https://forgelayer.io/dashboard" target="_blank" rel="noopener">ForgeLayer dashboard</a> then enter its CoinGecko ID in the field below.', 'forgelayer-woocommerce' ) ),
+						wp_kses_post( __( '<strong>%d tokens</strong> supported. To add a token not listed here, first add it in your <a href="https://forgelayer.io/dashboard" target="_blank" rel="noopener">ForgeLayer dashboard</a> then enter its CoinGecko ID in the field below.', 'forgelayer-crypto-payments-for-woocommerce' ) ),
 						count( self::$token_directory )
 					);
 					?>
@@ -1003,7 +1007,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc">
-				<?php esc_html_e( 'Your Webhook URL', 'forgelayer-woocommerce' ); ?>
+				<?php esc_html_e( 'Your Webhook URL', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 			</th>
 			<td class="forminp">
 				<input type="text" readonly
@@ -1011,7 +1015,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 				       style="width:100%;max-width:520px;font-family:monospace"
 				       onclick="this.select()">
 				<p class="description">
-					<?php esc_html_e( 'Copy this URL into the "Setup Webhook" button below — it will be registered automatically.', 'forgelayer-woocommerce' ); ?>
+					<?php esc_html_e( 'Copy this URL into the "Setup Webhook" button below — it will be registered automatically.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 				</p>
 			</td>
 		</tr>
@@ -1026,8 +1030,8 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$has_key      = (bool) $this->get_option( 'api_key' );
 		$webhook_id   = get_option( 'fl_webhook_id', '' );
 		$status_label = $webhook_id
-			? sprintf( __( 'Active (ID: %s)', 'forgelayer-woocommerce' ), esc_html( $webhook_id ) )
-			: __( 'Not registered yet.', 'forgelayer-woocommerce' );
+			? sprintf( __( 'Active (ID: %s)', 'forgelayer-crypto-payments-for-woocommerce' ), esc_html( $webhook_id ) )
+			: __( 'Not registered yet.', 'forgelayer-crypto-payments-for-woocommerce' );
 
 		ob_start();
 		?>
@@ -1038,19 +1042,19 @@ class FL_Gateway extends WC_Payment_Gateway {
 			<td class="forminp">
 				<?php if ( ! $has_key ) : ?>
 					<p class="description">
-						<?php esc_html_e( 'Enter and save your API key above first.', 'forgelayer-woocommerce' ); ?>
+						<?php esc_html_e( 'Enter and save your API key above first.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 					</p>
 				<?php else : ?>
 					<button type="button" id="fl-setup-webhook" class="button button-primary">
 						<?php echo $webhook_id
-							? esc_html__( 'Re-register Webhook', 'forgelayer-woocommerce' )
-							: esc_html__( 'Setup Webhook', 'forgelayer-woocommerce' ); ?>
+							? esc_html__( 'Re-register Webhook', 'forgelayer-crypto-payments-for-woocommerce' )
+							: esc_html__( 'Setup Webhook', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 					</button>
 					<span id="fl-webhook-status" style="margin-left:10px;font-style:italic;color:#666">
 						<?php echo esc_html( $status_label ); ?>
 					</span>
 					<p class="description" style="margin-top:6px">
-						<?php esc_html_e( 'Generates a secret, registers your webhook URL with ForgeLayer, and saves everything automatically. Save your API key and Confirmation setting first.', 'forgelayer-woocommerce' ); ?>
+						<?php esc_html_e( 'Generates a secret, registers your webhook URL with ForgeLayer, and saves everything automatically. Save your API key and Confirmation setting first.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 					</p>
 				<?php endif; ?>
 			</td>
@@ -1244,7 +1248,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 			if ( ! $sufficient ) {
 				$order->add_order_note( sprintf(
-					__( 'ForgeLayer webhook: underpayment detected. Expected %1$s, total received so far %2$s. Waiting for top-up.', 'forgelayer-woocommerce' ),
+					__( 'ForgeLayer webhook: underpayment detected. Expected %1$s, total received so far %2$s. Waiting for top-up.', 'forgelayer-crypto-payments-for-woocommerce' ),
 					esc_html( $expected_amount ),
 					esc_html( $total_received )
 				) );
@@ -1264,15 +1268,15 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( $is_late ) {
 			$order->add_order_note( sprintf(
-				__( 'ForgeLayer: LATE payment confirmed after order window expired. Amount: %1$s. Tx: %2$s. Order reopened automatically.', 'forgelayer-woocommerce' ),
+				__( 'ForgeLayer: LATE payment confirmed after order window expired. Amount: %1$s. Tx: %2$s. Order reopened automatically.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				esc_html( $amount ),
-				$tx_hash ? esc_html( $tx_hash ) : __( 'N/A', 'forgelayer-woocommerce' )
+				$tx_hash ? esc_html( $tx_hash ) : __( 'N/A', 'forgelayer-crypto-payments-for-woocommerce' )
 			) );
 		} else {
 			$order->add_order_note( sprintf(
-				__( 'ForgeLayer: payment confirmed. Amount: %1$s. Tx: %2$s', 'forgelayer-woocommerce' ),
+				__( 'ForgeLayer: payment confirmed. Amount: %1$s. Tx: %2$s', 'forgelayer-crypto-payments-for-woocommerce' ),
 				esc_html( $amount ),
-				$tx_hash ? esc_html( $tx_hash ) : __( 'N/A', 'forgelayer-woocommerce' )
+				$tx_hash ? esc_html( $tx_hash ) : __( 'N/A', 'forgelayer-crypto-payments-for-woocommerce' )
 			) );
 		}
 
@@ -1358,7 +1362,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		// Order note visible to admin in WooCommerce
 		$order->add_order_note( sprintf(
 			/* translators: 1: amount+symbol, 2: tx hash, 3: address */
-			__( 'DUPLICATE PAYMENT: %1$s received on address %2$s (%3$s) after this order was already completed. Tx: %4$s. Funds are in your ForgeLayer wallet — issue a manual refund if required.', 'forgelayer-woocommerce' ),
+			__( 'DUPLICATE PAYMENT: %1$s received on address %2$s (%3$s) after this order was already completed. Tx: %4$s. Funds are in your ForgeLayer wallet — issue a manual refund if required.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			esc_html( $amount . ' ' . $token_symbol ),
 			esc_html( $address ),
 			esc_html( $chain_id ),
@@ -1381,12 +1385,12 @@ class FL_Gateway extends WC_Payment_Gateway {
 		// Email the site admin
 		$subject = sprintf(
 			/* translators: order number */
-			__( '[Action Required] Duplicate crypto payment on Order #%d', 'forgelayer-woocommerce' ),
+			__( '[Action Required] Duplicate crypto payment on Order #%d', 'forgelayer-crypto-payments-for-woocommerce' ),
 			$order->get_id()
 		);
 
 		$message = sprintf(
-			__( "A second cryptocurrency payment was received on an address belonging to an already-completed order.\n\nOrder   : #%1\$d\nCustomer: %2\$s\nAddress : %3\$s (%4\$s)\nAmount  : %5\$s %6\$s\nTx Hash : %7\$s\n\nThe funds are sitting in your ForgeLayer wallet. Please log in to your ForgeLayer dashboard and issue a manual refund to the customer.\n\nOrder URL: %8\$s", 'forgelayer-woocommerce' ),
+			__( "A second cryptocurrency payment was received on an address belonging to an already-completed order.\n\nOrder   : #%1\$d\nCustomer: %2\$s\nAddress : %3\$s (%4\$s)\nAmount  : %5\$s %6\$s\nTx Hash : %7\$s\n\nThe funds are sitting in your ForgeLayer wallet. Please log in to your ForgeLayer dashboard and issue a manual refund to the customer.\n\nOrder URL: %8\$s", 'forgelayer-crypto-payments-for-woocommerce' ),
 			$order->get_id(),
 			$order->get_formatted_billing_full_name(),
 			$address,
@@ -1479,14 +1483,14 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( empty( $options ) ) {
 			echo '<p class="fl-error">'
-				. esc_html__( 'No payment options are currently available. Please contact the store owner.', 'forgelayer-woocommerce' )
+				. esc_html__( 'No payment options are currently available. Please contact the store owner.', 'forgelayer-crypto-payments-for-woocommerce' )
 				. '</p>';
 			return;
 		}
 
 		echo '<div class="fl-payment-options">';
 		echo '<p class="fl-select-label"><strong>'
-			. esc_html__( 'Select network & currency:', 'forgelayer-woocommerce' )
+			. esc_html__( 'Select network & currency:', 'forgelayer-crypto-payments-for-woocommerce' )
 			. '</strong></p>';
 		echo '<div class="fl-options-grid">';
 
@@ -1507,7 +1511,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$option = sanitize_text_field( isset( $_POST['fl_payment_option'] ) ? $_POST['fl_payment_option'] : '' );
 
 		if ( empty( $option ) ) {
-			wc_add_notice( __( 'Please select a payment network.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Please select a payment network.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return false;
 		}
 
@@ -1518,17 +1522,17 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		$allowed_chains = array( 'bitcoin', 'ethereum', 'bsc', 'tron' );
 		if ( ! in_array( $chain_id, $allowed_chains, true ) ) {
-			wc_add_notice( __( 'Invalid payment option selected.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Invalid payment option selected.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return false;
 		}
 
 		if ( $token_key !== 'native' && ! preg_match( '/^[A-Z0-9]{1,20}$/', $token_key ) ) {
-			wc_add_notice( __( 'Invalid payment option selected.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Invalid payment option selected.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return false;
 		}
 
 		if ( ! array_key_exists( $option, $this->get_enabled_options() ) ) {
-			wc_add_notice( __( 'Invalid payment option selected.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Invalid payment option selected.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return false;
 		}
 
@@ -1551,26 +1555,26 @@ class FL_Gateway extends WC_Payment_Gateway {
 		// Whitelist chain_id against allowed values
 		$allowed_chains = array( 'bitcoin', 'ethereum', 'bsc', 'tron' );
 		if ( ! in_array( $chain_id, $allowed_chains, true ) ) {
-			wc_add_notice( __( 'Invalid payment option. Please try again.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Invalid payment option. Please try again.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
 		// Validate token symbol format (if not native)
 		if ( $token_key !== 'native' && ! preg_match( '/^[A-Z0-9]{1,20}$/', $token_key ) ) {
-			wc_add_notice( __( 'Invalid payment option. Please try again.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Invalid payment option. Please try again.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
 		$token_info = $this->get_token_info( $chain_id, $token_key );
 
 		if ( ! $token_info ) {
-			wc_add_notice( __( 'Invalid payment option. Please try again.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Invalid payment option. Please try again.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
 		$api_key = $this->get_option( 'api_key' );
 		if ( empty( $api_key ) ) {
-			wc_add_notice( __( 'Payment configuration error. Please contact the store owner.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Payment configuration error. Please contact the store owner.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
@@ -1614,14 +1618,14 @@ class FL_Gateway extends WC_Payment_Gateway {
 					// Subscription / limit error — notify admin, show generic customer message
 					$this->handle_checkout_api_error( $result, $order );
 					wc_add_notice(
-						__( 'Cryptocurrency payment is temporarily unavailable. Please try another payment method or contact us.', 'forgelayer-woocommerce' ),
+						__( 'Cryptocurrency payment is temporarily unavailable. Please try another payment method or contact us.', 'forgelayer-crypto-payments-for-woocommerce' ),
 						'error'
 					);
 				} else {
 					// Transient / network error
 					$order->add_order_note( 'ForgeLayer API error: ' . sanitize_text_field( $result->get_error_message() ) );
 					wc_add_notice(
-						__( 'Could not generate a payment address. Please try again or choose another method.', 'forgelayer-woocommerce' ),
+						__( 'Could not generate a payment address. Please try again or choose another method.', 'forgelayer-crypto-payments-for-woocommerce' ),
 						'error'
 					);
 				}
@@ -1634,7 +1638,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		}
 
 		if ( empty( $address ) ) {
-			wc_add_notice( __( 'Received an invalid response from the payment provider. Please try again.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Received an invalid response from the payment provider. Please try again.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
 
@@ -1643,7 +1647,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		// Validate address format matches expected pattern for this chain (H-1)
 		if ( ! $this->validate_address_format( $chain_id, $address ) ) {
-			wc_add_notice( __( 'Received a malformed payment address. Please try again.', 'forgelayer-woocommerce' ), 'error' );
+			wc_add_notice( __( 'Received a malformed payment address. Please try again.', 'forgelayer-crypto-payments-for-woocommerce' ), 'error' );
 			$order->add_order_note( 'ForgeLayer returned an address that failed format validation for chain: ' . sanitize_text_field( $chain_id ) );
 			return array( 'result' => 'failure' );
 		}
@@ -1679,11 +1683,11 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$order->update_meta_data( '_fl_address_reused',    $reused ? 'yes' : 'no' );
 		$order->save();
 
-		$order->update_status( 'on-hold', __( 'Awaiting cryptocurrency payment via ForgeLayer.', 'forgelayer-woocommerce' ) );
+		$order->update_status( 'on-hold', __( 'Awaiting cryptocurrency payment via ForgeLayer.', 'forgelayer-crypto-payments-for-woocommerce' ) );
 
 		if ( $reused ) {
 			$order->add_order_note( sprintf(
-				__( 'ForgeLayer address reused: %1$s on %2$s (starting balance: %3$s %4$s). Expecting additional %5$s %4$s.', 'forgelayer-woocommerce' ),
+				__( 'ForgeLayer address reused: %1$s on %2$s (starting balance: %3$s %4$s). Expecting additional %5$s %4$s.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				esc_html( $address ), esc_html( $chain_id ),
 				esc_html( number_format( $starting_balance, 8, '.', '' ) ),
 				esc_html( $token_info['symbol'] ),
@@ -1691,7 +1695,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			) );
 		} else {
 			$order->add_order_note( sprintf(
-				__( 'ForgeLayer address generated: %1$s on %2$s. Expecting %3$s %4$s.', 'forgelayer-woocommerce' ),
+				__( 'ForgeLayer address generated: %1$s on %2$s. Expecting %3$s %4$s.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				esc_html( $address ), esc_html( $chain_id ), esc_html( $crypto_amount ), esc_html( $token_info['symbol'] )
 			) );
 		}
@@ -1726,7 +1730,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( in_array( $order->get_status(), array( 'processing', 'completed' ), true ) ) {
 			echo '<div class="fl-payment-confirmed">'
-				. esc_html__( 'Payment confirmed. Thank you! Your order is being processed.', 'forgelayer-woocommerce' )
+				. esc_html__( 'Payment confirmed. Thank you! Your order is being processed.', 'forgelayer-crypto-payments-for-woocommerce' )
 				. '</div>';
 			return;
 		}
@@ -1734,10 +1738,10 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$chain_label = isset( self::$chains[ $chain_id ]['label'] ) ? self::$chains[ $chain_id ]['label'] : $chain_id;
 
 		$network_warnings = array(
-			'bitcoin'  => __( 'Send on the Bitcoin mainnet only. Lightning Network payments are not supported.', 'forgelayer-woocommerce' ),
-			'ethereum' => __( 'Send on the Ethereum (ETH) mainnet only. Do NOT send from other networks.', 'forgelayer-woocommerce' ),
-			'bsc'      => __( 'Send on BNB Smart Chain (BSC / BEP-20) only. Do NOT use the Ethereum network.', 'forgelayer-woocommerce' ),
-			'tron'     => __( 'Send on the Tron (TRC-20) network only. Do NOT use Ethereum or BSC.', 'forgelayer-woocommerce' ),
+			'bitcoin'  => __( 'Send on the Bitcoin mainnet only. Lightning Network payments are not supported.', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'ethereum' => __( 'Send on the Ethereum (ETH) mainnet only. Do NOT send from other networks.', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'bsc'      => __( 'Send on BNB Smart Chain (BSC / BEP-20) only. Do NOT use the Ethereum network.', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'tron'     => __( 'Send on the Tron (TRC-20) network only. Do NOT use Ethereum or BSC.', 'forgelayer-crypto-payments-for-woocommerce' ),
 		);
 		?>
 		<div class="fl-payment-box"
@@ -1747,22 +1751,22 @@ class FL_Gateway extends WC_Payment_Gateway {
 		     data-nonce="<?php echo esc_attr( wp_create_nonce( 'fl_check_payment_' . $order_id ) ); ?>">
 
 			<h2 class="fl-payment-title">
-				<?php esc_html_e( 'Complete Your Payment', 'forgelayer-woocommerce' ); ?>
+				<?php esc_html_e( 'Complete Your Payment', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 			</h2>
 
 			<div class="fl-payment-status">
 				<span class="fl-status-dot fl-status-pending"></span>
-				<span id="fl-status-text"><?php esc_html_e( 'Awaiting payment…', 'forgelayer-woocommerce' ); ?></span>
+				<span id="fl-status-text"><?php esc_html_e( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ); ?></span>
 			</div>
 
 			<div class="fl-countdown">
-				<?php esc_html_e( 'Time remaining:', 'forgelayer-woocommerce' ); ?>
+				<?php esc_html_e( 'Time remaining:', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 				<span id="fl-timer">--:--</span>
 			</div>
 
 			<?php if ( ! empty( $network_warnings[ $chain_id ] ) ) : ?>
 			<div class="fl-network-warning">
-				<strong><?php esc_html_e( 'Important:', 'forgelayer-woocommerce' ); ?></strong>
+				<strong><?php esc_html_e( 'Important:', 'forgelayer-crypto-payments-for-woocommerce' ); ?></strong>
 				<?php echo esc_html( $network_warnings[ $chain_id ] ); ?>
 			</div>
 			<?php endif; ?>
@@ -1771,15 +1775,15 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 				<div class="fl-qr-container">
 					<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?php echo rawurlencode( $address ); ?>"
-					     alt="<?php esc_attr_e( 'Payment QR Code', 'forgelayer-woocommerce' ); ?>"
+					     alt="<?php esc_attr_e( 'Payment QR Code', 'forgelayer-crypto-payments-for-woocommerce' ); ?>"
 					     width="180" height="180" class="fl-qr-code">
-					<p class="fl-qr-label"><?php esc_html_e( 'Scan to pay', 'forgelayer-woocommerce' ); ?></p>
+					<p class="fl-qr-label"><?php esc_html_e( 'Scan to pay', 'forgelayer-crypto-payments-for-woocommerce' ); ?></p>
 				</div>
 
 				<div class="fl-payment-info">
 
 					<div class="fl-info-block" id="fl-amount-block">
-						<label><?php esc_html_e( 'Amount to Send', 'forgelayer-woocommerce' ); ?></label>
+						<label><?php esc_html_e( 'Amount to Send', 'forgelayer-crypto-payments-for-woocommerce' ); ?></label>
 						<?php if ( $crypto_amount ) : ?>
 						<div class="fl-copy-row" id="fl-amount-row">
 							<span class="fl-amount-value" id="fl-amount-value">
@@ -1787,27 +1791,27 @@ class FL_Gateway extends WC_Payment_Gateway {
 								<small class="fl-token-sym"><?php echo esc_html( $token_symbol ); ?></small>
 							</span>
 							<button type="button" class="fl-copy-btn" data-copy="<?php echo esc_attr( $crypto_amount ); ?>">
-								<?php esc_html_e( 'Copy', 'forgelayer-woocommerce' ); ?>
+								<?php esc_html_e( 'Copy', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 							</button>
 						</div>
 						<?php else : ?>
 						<div id="fl-amount-row" class="fl-amount-calculating">
 							<span id="fl-amount-value" data-symbol="<?php echo esc_attr( $token_symbol ); ?>">
-								<?php esc_html_e( 'Calculating…', 'forgelayer-woocommerce' ); ?>
+								<?php esc_html_e( 'Calculating…', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 							</span>
 							<small style="display:block;margin-top:4px">
-								<?php esc_html_e( 'Price loading — appears in a few seconds.', 'forgelayer-woocommerce' ); ?>
+								<?php esc_html_e( 'Price loading — appears in a few seconds.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 							</small>
 						</div>
 						<?php endif; ?>
 					</div>
 
 					<div class="fl-info-block">
-						<label><?php echo esc_html( $chain_label ); ?> <?php esc_html_e( 'Address', 'forgelayer-woocommerce' ); ?></label>
+						<label><?php echo esc_html( $chain_label ); ?> <?php esc_html_e( 'Address', 'forgelayer-crypto-payments-for-woocommerce' ); ?></label>
 						<div class="fl-copy-row">
 							<span class="fl-address-value"><?php echo esc_html( $address ); ?></span>
 							<button type="button" class="fl-copy-btn" data-copy="<?php echo esc_attr( $address ); ?>">
-								<?php esc_html_e( 'Copy', 'forgelayer-woocommerce' ); ?>
+								<?php esc_html_e( 'Copy', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 							</button>
 						</div>
 					</div>
@@ -1818,7 +1822,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 							<?php echo esc_html( $chain_label ); ?> · <?php echo esc_html( $token_symbol ); ?>
 						</div>
 						<span class="fl-help-inline">
-							<?php esc_html_e( 'Send exact amount shown above.', 'forgelayer-woocommerce' ); ?>
+							<?php esc_html_e( 'Send exact amount shown above.', 'forgelayer-crypto-payments-for-woocommerce' ); ?>
 						</span>
 					</div>
 
@@ -1852,29 +1856,29 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( $plain_text ) {
 			// Plain-text email — esc_html not needed for email body, but sanitize all variables
-			echo "\n" . strtoupper( esc_html( __( 'Cryptocurrency Payment Instructions', 'forgelayer-woocommerce' ) ) ) . "\n";
+			echo "\n" . strtoupper( esc_html( __( 'Cryptocurrency Payment Instructions', 'forgelayer-crypto-payments-for-woocommerce' ) ) ) . "\n";
 			if ( $crypto_amount ) {
-				echo esc_html( sprintf( __( 'Amount : %1$s %2$s', 'forgelayer-woocommerce' ), $crypto_amount, $token_symbol ) ) . "\n";
+				echo esc_html( sprintf( __( 'Amount : %1$s %2$s', 'forgelayer-crypto-payments-for-woocommerce' ), $crypto_amount, $token_symbol ) ) . "\n";
 			}
-			echo esc_html( sprintf( __( 'Network: %s', 'forgelayer-woocommerce' ), $chain_label ) ) . "\n";
-			echo esc_html( sprintf( __( 'Address: %s', 'forgelayer-woocommerce' ), $address ) ) . "\n\n";
+			echo esc_html( sprintf( __( 'Network: %s', 'forgelayer-crypto-payments-for-woocommerce' ), $chain_label ) ) . "\n";
+			echo esc_html( sprintf( __( 'Address: %s', 'forgelayer-crypto-payments-for-woocommerce' ), $address ) ) . "\n\n";
 		} else {
 			echo '<h2 style="color:#555;font-size:18px">'
-				. esc_html__( 'Cryptocurrency Payment Instructions', 'forgelayer-woocommerce' )
+				. esc_html__( 'Cryptocurrency Payment Instructions', 'forgelayer-crypto-payments-for-woocommerce' )
 				. '</h2>';
 			echo '<table cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #e5e5e5">';
 			if ( $crypto_amount ) {
 				echo '<tr><td style="border:1px solid #e5e5e5;padding:8px"><strong>'
-					. esc_html__( 'Amount', 'forgelayer-woocommerce' ) . '</strong></td>'
+					. esc_html__( 'Amount', 'forgelayer-crypto-payments-for-woocommerce' ) . '</strong></td>'
 					. '<td style="border:1px solid #e5e5e5;padding:8px">'
 					. esc_html( $crypto_amount ) . ' ' . esc_html( $token_symbol ) . '</td></tr>';
 			}
 			echo '<tr><td style="border:1px solid #e5e5e5;padding:8px"><strong>'
-				. esc_html__( 'Network', 'forgelayer-woocommerce' ) . '</strong></td>'
+				. esc_html__( 'Network', 'forgelayer-crypto-payments-for-woocommerce' ) . '</strong></td>'
 				. '<td style="border:1px solid #e5e5e5;padding:8px">'
 				. esc_html( $chain_label ) . '</td></tr>';
 			echo '<tr><td style="border:1px solid #e5e5e5;padding:8px"><strong>'
-				. esc_html__( 'Payment Address', 'forgelayer-woocommerce' ) . '</strong></td>'
+				. esc_html__( 'Payment Address', 'forgelayer-crypto-payments-for-woocommerce' ) . '</strong></td>'
 				. '<td style="border:1px solid #e5e5e5;padding:8px;word-break:break-all;font-family:monospace">'
 				. esc_html( $address ) . '</td></tr>';
 			echo '</table><br>';
@@ -1929,7 +1933,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		if ( in_array( $order->get_status(), array( 'processing', 'completed' ), true ) ) {
 			return array(
 				'status'   => 'confirmed',
-				'message'  => __( 'Payment confirmed.', 'forgelayer-woocommerce' ),
+				'message'  => __( 'Payment confirmed.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'redirect' => $this->get_return_url( $order ),
 			);
 		}
@@ -1941,7 +1945,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			if ( $payment_status !== 'expired' ) {
 				$order->update_meta_data( '_fl_payment_status', 'expired' );
 				$order->save();
-				$order->update_status( 'cancelled', __( 'ForgeLayer: payment window expired.', 'forgelayer-woocommerce' ) );
+				$order->update_status( 'cancelled', __( 'ForgeLayer: payment window expired.', 'forgelayer-crypto-payments-for-woocommerce' ) );
 				$payment_status = 'expired';
 			}
 
@@ -1949,21 +1953,21 @@ class FL_Gateway extends WC_Payment_Gateway {
 			// WP-Cron path: continue only if within the grace period
 			$called_from_cron = ! defined( 'DOING_AJAX' ) || ! DOING_AJAX;
 			if ( ! $called_from_cron || ! $this->is_within_grace_period( $expires_at ) ) {
-				return array( 'status' => 'expired', 'message' => __( 'Payment window has expired.', 'forgelayer-woocommerce' ) );
+				return array( 'status' => 'expired', 'message' => __( 'Payment window has expired.', 'forgelayer-crypto-payments-for-woocommerce' ) );
 			}
 			// Within grace period and called from cron — fall through to balance check
 		}
 
 		$api_key = $this->get_option( 'api_key' );
 		if ( ! $api_key ) {
-			return array( 'status' => 'pending', 'message' => __( 'Awaiting payment…', 'forgelayer-woocommerce' ) );
+			return array( 'status' => 'pending', 'message' => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ) );
 		}
 
 		$api    = new FL_API( $api_key );
 		$result = $api->check_balance( $address, $chain_id, $token_contract, $token_decimals );
 
 		if ( is_wp_error( $result ) ) {
-			return array( 'status' => 'pending', 'message' => __( 'Awaiting payment…', 'forgelayer-woocommerce' ) );
+			return array( 'status' => 'pending', 'message' => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ) );
 		}
 
 		$raw_balance = 0.0;
@@ -1994,7 +1998,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			if ( in_array( $fresh->get_status(), array( 'processing', 'completed' ), true ) ) {
 				return array(
 					'status'   => 'confirmed',
-					'message'  => __( 'Payment confirmed.', 'forgelayer-woocommerce' ),
+					'message'  => __( 'Payment confirmed.', 'forgelayer-crypto-payments-for-woocommerce' ),
 					'redirect' => $this->get_return_url( $fresh ),
 				);
 			}
@@ -2006,19 +2010,19 @@ class FL_Gateway extends WC_Payment_Gateway {
 			if ( $is_expired ) {
 				// Late payment within grace period, caught by cron (no webhook)
 				$fresh->add_order_note( sprintf(
-					__( 'ForgeLayer: LATE payment detected by cron (within grace period). Balance: %s. Order reopened automatically.', 'forgelayer-woocommerce' ),
+					__( 'ForgeLayer: LATE payment detected by cron (within grace period). Balance: %s. Order reopened automatically.', 'forgelayer-crypto-payments-for-woocommerce' ),
 					number_format( $balance, 8, '.', '' )
 				) );
 			} else {
 				$fresh->add_order_note( sprintf(
-					__( 'ForgeLayer: payment confirmed. Balance: %s', 'forgelayer-woocommerce' ),
+					__( 'ForgeLayer: payment confirmed. Balance: %s', 'forgelayer-crypto-payments-for-woocommerce' ),
 					number_format( $balance, 8, '.', '' )
 				) );
 			}
 
 			return array(
 				'status'   => 'confirmed',
-				'message'  => __( 'Payment confirmed!', 'forgelayer-woocommerce' ),
+				'message'  => __( 'Payment confirmed!', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'redirect' => $this->get_return_url( $fresh ),
 			);
 		}
@@ -2029,7 +2033,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		// empty at checkout time (price lookup may have been retried above)
 		return array(
 			'status'         => 'pending',
-			'message'        => __( 'Awaiting payment…', 'forgelayer-woocommerce' ),
+			'message'        => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ),
 			'crypto_amount'  => $crypto_amount,
 			'token_symbol'   => $order->get_meta( '_fl_token_symbol' ),
 		);
@@ -2159,26 +2163,26 @@ class FL_Gateway extends WC_Payment_Gateway {
 		if ( ! get_transient( $email_key ) ) {
 			$dashboard_url = 'https://forgelayer.io/dashboard/billing';
 			$labels = array(
-				'LIMIT_EXCEEDED'         => __( 'Usage limit reached', 'forgelayer-woocommerce' ),
-				'SUBSCRIPTION_EXPIRED'   => __( 'Subscription expired', 'forgelayer-woocommerce' ),
-				'SUBSCRIPTION_PENDING'   => __( 'Subscription pending payment', 'forgelayer-woocommerce' ),
-				'NO_SUBSCRIPTION'        => __( 'No active subscription', 'forgelayer-woocommerce' ),
+				'LIMIT_EXCEEDED'         => __( 'Usage limit reached', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'SUBSCRIPTION_EXPIRED'   => __( 'Subscription expired', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'SUBSCRIPTION_PENDING'   => __( 'Subscription pending payment', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'NO_SUBSCRIPTION'        => __( 'No active subscription', 'forgelayer-crypto-payments-for-woocommerce' ),
 			);
-			$label = isset( $labels[ $code ] ) ? $labels[ $code ] : __( 'API error', 'forgelayer-woocommerce' );
+			$label = isset( $labels[ $code ] ) ? $labels[ $code ] : __( 'API error', 'forgelayer-crypto-payments-for-woocommerce' );
 
 			$impacts = array(
-				'LIMIT_EXCEEDED'         => __( 'Customers cannot generate new payment addresses. Address reuse may still work if enabled.', 'forgelayer-woocommerce' ),
-				'SUBSCRIPTION_EXPIRED'   => __( 'All cryptocurrency checkout is blocked until you renew.', 'forgelayer-woocommerce' ),
-				'SUBSCRIPTION_PENDING'   => __( 'All cryptocurrency checkout is blocked until payment is completed.', 'forgelayer-woocommerce' ),
-				'NO_SUBSCRIPTION'        => __( 'All cryptocurrency checkout is blocked. You need an active ForgeLayer subscription.', 'forgelayer-woocommerce' ),
+				'LIMIT_EXCEEDED'         => __( 'Customers cannot generate new payment addresses. Address reuse may still work if enabled.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'SUBSCRIPTION_EXPIRED'   => __( 'All cryptocurrency checkout is blocked until you renew.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'SUBSCRIPTION_PENDING'   => __( 'All cryptocurrency checkout is blocked until payment is completed.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'NO_SUBSCRIPTION'        => __( 'All cryptocurrency checkout is blocked. You need an active ForgeLayer subscription.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			);
-			$impact = isset( $impacts[ $code ] ) ? $impacts[ $code ] : __( 'Cryptocurrency checkout may be affected.', 'forgelayer-woocommerce' );
+			$impact = isset( $impacts[ $code ] ) ? $impacts[ $code ] : __( 'Cryptocurrency checkout may be affected.', 'forgelayer-crypto-payments-for-woocommerce' );
 
 			$order_ref = $order ? sprintf( ' (Order #%d attempted)', $order->get_id() ) : '';
 
 			wp_mail(
 				get_option( 'admin_email' ),
-				sprintf( __( '[Action Required] ForgeLayer: %s — checkout blocked%s', 'forgelayer-woocommerce' ), $label, $order_ref ),
+				sprintf( __( '[Action Required] ForgeLayer: %s — checkout blocked%s', 'forgelayer-crypto-payments-for-woocommerce' ), $label, $order_ref ),
 				sprintf(
 					"%s\n\n%s\n\nError: %s\n\nLog in to your ForgeLayer dashboard to resolve this:\n%s\n\nThis alert will not repeat for 24 hours.",
 					$label,
@@ -2221,7 +2225,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$chain_id      = $order->get_meta( '_fl_chain' );
 
 		$order->add_order_note( sprintf(
-			__( 'ForgeLayer: late payment received %1$d min after expiry (grace period: %2$d min). Amount: %3$s %4$s. Tx: %5$s. Manual review required — funds are in your ForgeLayer wallet.', 'forgelayer-woocommerce' ),
+			__( 'ForgeLayer: late payment received %1$d min after expiry (grace period: %2$d min). Amount: %3$s %4$s. Tx: %5$s. Manual review required — funds are in your ForgeLayer wallet.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			$minutes_late,
 			$grace_minutes,
 			esc_html( $amount ),
@@ -2233,11 +2237,11 @@ class FL_Gateway extends WC_Payment_Gateway {
 			get_option( 'admin_email' ),
 			sprintf(
 				/* translators: order number */
-				__( '[Action Required] Late crypto payment — Order #%d (beyond grace period)', 'forgelayer-woocommerce' ),
+				__( '[Action Required] Late crypto payment — Order #%d (beyond grace period)', 'forgelayer-crypto-payments-for-woocommerce' ),
 				$order->get_id()
 			),
 			sprintf(
-				__( "A cryptocurrency payment arrived %1\$d minutes after the order window expired, which exceeds your %2\$d-minute grace period. The order has NOT been automatically reopened.\n\nOrder   : #%3\$d\nCustomer: %4\$s\nAmount  : %5\$s %6\$s\nNetwork : %7\$s\nTx Hash : %8\$s\n\nOptions:\n• If the amount and price are acceptable, manually set the order status to Processing in WooCommerce.\n• If you want to refund, log into your ForgeLayer dashboard and return the funds.\n\nOrder URL: %9\$s", 'forgelayer-woocommerce' ),
+				__( "A cryptocurrency payment arrived %1\$d minutes after the order window expired, which exceeds your %2\$d-minute grace period. The order has NOT been automatically reopened.\n\nOrder   : #%3\$d\nCustomer: %4\$s\nAmount  : %5\$s %6\$s\nNetwork : %7\$s\nTx Hash : %8\$s\n\nOptions:\n• If the amount and price are acceptable, manually set the order status to Processing in WooCommerce.\n• If you want to refund, log into your ForgeLayer dashboard and return the funds.\n\nOrder URL: %9\$s", 'forgelayer-crypto-payments-for-woocommerce' ),
 				$minutes_late,
 				$grace_minutes,
 				$order->get_id(),
