@@ -1,0 +1,429 @@
+/* ==========================================================================
+   ForgeLayer — Checkout & Payment Page Styles
+   Theme-aware: inherits fonts, respects WooCommerce/block-editor colour palette.
+   Override --fl-accent in your theme's CSS to re-skin the plugin entirely.
+   ========================================================================== */
+
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Set --fl-accent on :root or any ancestor to match your brand colour.
+   Falls back to the WP block editor primary, then a neutral indigo.       */
+:root {
+	--fl-accent:        var(--wp--preset--color--primary,
+	                    var(--wc-highlight-color, #5b21b6));
+	--fl-accent-hover:  var(--wp--preset--color--primary-dark, #4c1d95);
+	--fl-accent-light:  color-mix(in srgb, var(--fl-accent) 8%, transparent);
+	--fl-success:       #16a34a;
+	--fl-warning-bg:    #fffbeb;
+	--fl-warning-border:#d97706;
+	--fl-warning-text:  #78350f;
+	--fl-danger:        #dc2626;
+	--fl-border:        #e5e7eb;
+	--fl-muted:         #6b7280;
+	--fl-radius:        10px;
+	--fl-radius-sm:     6px;
+}
+
+/* ── Checkout: payment option grid ────────────────────────────────────────*/
+.fl-payment-options {
+	margin: 14px 0 6px;
+}
+
+.fl-select-label {
+	margin-bottom: 10px;
+	font-size: .9em;
+	color: var(--fl-muted);
+}
+
+.fl-options-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.fl-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 9px 16px;
+	border: 1.5px solid var(--fl-border);
+	border-radius: var(--fl-radius-sm);
+	cursor: pointer;
+	transition: border-color .15s, background .15s, box-shadow .15s;
+	font-size: inherit;
+	font-family: inherit;
+	background: #fff;
+	user-select: none;
+	line-height: 1.4;
+}
+
+.fl-option:hover {
+	border-color: var(--fl-accent);
+	background: var(--fl-accent-light);
+}
+
+.fl-option-selected {
+	border-color: var(--fl-accent);
+	background: var(--fl-accent-light);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--fl-accent) 18%, transparent);
+}
+
+.fl-option input[type="radio"] {
+	margin: 0;
+	accent-color: var(--fl-accent);
+	flex-shrink: 0;
+	width: 15px;
+	height: 15px;
+}
+
+.fl-error {
+	color: var(--fl-danger);
+	font-style: italic;
+	margin: 8px 0;
+}
+
+/* ── Payment page: outer container ────────────────────────────────────────*/
+.fl-payment-box {
+	background: #fff;
+	border: 1px solid var(--fl-border);
+	border-radius: var(--fl-radius);
+	padding: 28px 30px;
+	margin: 22px 0 28px;
+	box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+	max-width: 660px;
+	font-family: inherit;
+}
+
+.fl-payment-title {
+	font-size: 1.2em;
+	font-weight: 700;
+	margin: 0 0 20px;
+	color: inherit;
+	border-bottom: 1px solid var(--fl-border);
+	padding-bottom: 14px;
+}
+
+/* ── Status indicator ──────────────────────────────────────────────────────*/
+.fl-payment-status {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 10px;
+	font-size: .88em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	color: var(--fl-muted);
+}
+
+.fl-status-dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.fl-status-pending   { background: #f59e0b; animation: fl-pulse 1.8s ease-in-out infinite; }
+.fl-status-received  { background: #3b82f6; }
+.fl-status-confirmed { background: var(--fl-success); }
+.fl-status-expired   { background: var(--fl-danger); }
+
+@keyframes fl-pulse {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50%       { opacity: .4; transform: scale(.85); }
+}
+
+/* ── Countdown ─────────────────────────────────────────────────────────────*/
+.fl-countdown {
+	font-size: .82em;
+	color: var(--fl-muted);
+	margin-bottom: 18px;
+}
+
+#fl-timer {
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 1.05em;
+	font-weight: 700;
+	color: inherit;
+	margin-left: 4px;
+}
+
+/* ── Network warning ───────────────────────────────────────────────────────*/
+.fl-network-warning {
+	background: var(--fl-warning-bg);
+	border-left: 3px solid var(--fl-warning-border);
+	border-radius: 0 var(--fl-radius-sm) var(--fl-radius-sm) 0;
+	padding: 10px 14px;
+	margin-bottom: 20px;
+	font-size: .85em;
+	color: var(--fl-warning-text);
+	line-height: 1.5;
+}
+
+/* ── QR + info side by side ────────────────────────────────────────────────*/
+.fl-payment-details {
+	display: grid;
+	grid-template-columns: 180px 1fr;
+	gap: 22px;
+	margin-bottom: 0;          /* removed — meta-row sits flush at bottom */
+	align-items: start;
+}
+
+.fl-qr-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0;
+}
+
+.fl-qr-code {
+	display: block;
+	border: 1px solid var(--fl-border);
+	border-radius: var(--fl-radius-sm);
+	background: #fff;
+	padding: 6px;
+	width: 180px;
+	height: 180px;
+}
+
+.fl-qr-label {
+	font-size: .72em;
+	color: var(--fl-muted);
+	margin: 6px 0 0;
+	text-align: center;
+	letter-spacing: .03em;
+}
+
+.fl-payment-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	min-width: 0;                /* prevents text overflow in grid cell */
+}
+
+/* Bottom row: network badge + inline hint */
+.fl-meta-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 12px;
+	flex-wrap: wrap;
+}
+
+.fl-help-inline {
+	font-size: .75em;
+	color: var(--fl-muted);
+	font-style: italic;
+}
+
+/* ── Info blocks (amount, address) ─────────────────────────────────────────*/
+.fl-info-block {
+	margin-bottom: 16px;
+}
+
+.fl-info-block label {
+	display: block;
+	font-size: .72em;
+	text-transform: uppercase;
+	letter-spacing: .07em;
+	color: var(--fl-muted);
+	margin-bottom: 5px;
+	font-weight: 600;
+}
+
+.fl-copy-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #f9fafb;
+	border: 1px solid var(--fl-border);
+	border-radius: var(--fl-radius-sm);
+	padding: 10px 12px;
+}
+
+.fl-amount-value {
+	flex: 1;
+	font-size: 1.35em;
+	font-weight: 700;
+	color: inherit;
+	word-break: break-all;
+	line-height: 1.2;
+}
+
+.fl-token-sym {
+	font-size: .6em;
+	font-weight: 600;
+	color: var(--fl-muted);
+	margin-left: 4px;
+	letter-spacing: .04em;
+}
+
+.fl-address-value {
+	flex: 1;
+	font-family: 'Courier New', Courier, monospace;
+	font-size: .78em;
+	word-break: break-all;
+	color: #374151;
+	line-height: 1.5;
+}
+
+/* Copy button — uses WooCommerce button base + plugin colour override */
+.fl-copy-btn {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	background: var(--fl-accent);
+	color: #fff !important;
+	border: none;
+	border-radius: var(--fl-radius-sm);
+	padding: 6px 13px;
+	font-size: .78em;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background .15s, transform .1s;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.fl-copy-btn:hover,
+.fl-copy-btn:focus {
+	background: var(--fl-accent-hover);
+	color: #fff !important;
+	outline: 2px solid var(--fl-accent);
+	outline-offset: 2px;
+	transform: translateY(-1px);
+}
+
+/* ── Amount calculating state ───────────────────────────────────────────── */
+.fl-amount-calculating {
+	background: #f9fafb;
+	border: 1px dashed var(--fl-border);
+	border-radius: var(--fl-radius-sm);
+	padding: 10px 12px;
+	color: var(--fl-muted);
+	font-style: italic;
+	font-size: .88em;
+}
+
+/* ── Network badge ──────────────────────────────────────────────────────── */
+.fl-network-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: #f3f4f6;
+	border-radius: 20px;
+	padding: 4px 12px;
+	font-size: .75em;
+	color: #374151;
+	font-weight: 500;
+	margin-top: 6px;
+}
+
+.fl-network-badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--fl-accent);
+	display: inline-block;
+}
+
+/* ── Help text ──────────────────────────────────────────────────────────── */
+.fl-help-text {
+	font-size: .82em;
+	color: var(--fl-muted);
+	margin: 0;
+	padding-top: 16px;
+	border-top: 1px solid var(--fl-border);
+	line-height: 1.7;
+}
+
+/* ── Confirmed banner ───────────────────────────────────────────────────── */
+.fl-payment-confirmed {
+	background: #f0fdf4;
+	border: 1px solid #86efac;
+	border-radius: var(--fl-radius-sm);
+	padding: 16px 20px;
+	color: var(--fl-success);
+	font-weight: 600;
+	margin: 16px 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.fl-payment-confirmed::before {
+	content: 'Payment confirmed';
+	font-size: 1.3em;
+	font-weight: 700;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media ( max-width: 560px ) {
+	.fl-payment-box {
+		padding: 18px 14px;
+	}
+
+	.fl-payment-details {
+		grid-template-columns: 1fr;
+	}
+
+	.fl-qr-container {
+		order: 2;              /* QR below info on mobile — info is more important */
+	}
+
+	.fl-payment-info {
+		order: 1;
+	}
+
+	.fl-options-grid {
+		flex-direction: column;
+	}
+
+	.fl-amount-value {
+		font-size: 1.1em;
+	}
+
+	.fl-help-inline {
+		display: none;         /* too much text on small screen */
+	}
+}
+
+/* ── Dark mode support ──────────────────────────────────────────────────── */
+@media ( prefers-color-scheme: dark ) {
+	.fl-payment-box {
+		background: #1f2937;
+		border-color: #374151;
+		color: #f9fafb;
+	}
+
+	.fl-option {
+		background: #1f2937;
+		border-color: #374151;
+		color: #f9fafb;
+	}
+
+	.fl-copy-row {
+		background: #111827;
+		border-color: #374151;
+	}
+
+	.fl-address-value {
+		color: #d1d5db;
+	}
+
+	.fl-network-badge {
+		background: #374151;
+		color: #d1d5db;
+	}
+
+	.fl-amount-calculating {
+		background: #111827;
+		border-color: #374151;
+	}
+
+	.fl-qr-code {
+		filter: invert(1) hue-rotate(180deg);
+	}
+}
