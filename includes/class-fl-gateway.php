@@ -516,13 +516,15 @@ class FL_Gateway extends WC_Payment_Gateway {
 				// - Fonts:   same-origin only
 				// - Connect: same-origin AJAX
 				// - frame-ancestors: 'self' (replaces X-Frame-Options)
-				$plugin_url = esc_url_raw( FL_PLUGIN_URL );
+				$qr_img_src = $this->get_option( 'qr_codes_enabled', 'no' ) === 'yes'
+					? "img-src 'self' https://api.qrserver.com data:; "
+					: "img-src 'self' data:; ";
 				header(
 					"Content-Security-Policy: " .
 					"default-src 'self'; " .
 					"script-src 'self'; " .
 					"style-src 'self' 'unsafe-inline'; " .
-					"img-src 'self' https://api.qrserver.com data:; " .
+					$qr_img_src .
 					"font-src 'self'; " .
 					"connect-src 'self'; " .
 					"frame-ancestors 'self'; " .
@@ -747,6 +749,13 @@ class FL_Gateway extends WC_Payment_Gateway {
 				'type'        => 'checkbox',
 				'label'       => __( 'Reuse addresses from completed or cancelled orders instead of generating a new one each time', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'description' => __( 'When enabled, the plugin first checks for an existing address on the same chain that is no longer active. Only generates a new address if none is available. The previous balance is snapshotted so old funds never trigger a false confirmation.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'default'     => 'no',
+			),
+			'qr_codes_enabled' => array(
+				'title'       => __( 'Show QR Codes', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => __( 'Display a QR code on the payment page (uses the external api.qrserver.com service)', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'description' => __( 'When enabled, the blockchain payment address is sent to api.qrserver.com to generate a QR code image. No customer personal data is transmitted — only the wallet address. Disabled by default. See the External Services section in the plugin readme for terms and privacy links.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				'default'     => 'no',
 			),
 
@@ -984,14 +993,6 @@ class FL_Gateway extends WC_Payment_Gateway {
 					?>
 				</p>
 
-				<script>
-				document.getElementById('fl-token-search').addEventListener('input', function() {
-					var q = this.value.toLowerCase();
-					document.querySelectorAll('.fl-token-row').forEach(function(row) {
-						row.style.display = row.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
-					});
-				});
-				</script>
 			</td>
 		</tr>
 		<?php
@@ -1773,12 +1774,14 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 			<div class="fl-payment-details">
 
+				<?php if ( $this->get_option( 'qr_codes_enabled', 'no' ) === 'yes' ) : ?>
 				<div class="fl-qr-container">
 					<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?php echo rawurlencode( $address ); ?>"
 					     alt="<?php esc_attr_e( 'Payment QR Code', 'forgelayer-crypto-payments-for-woocommerce' ); ?>"
 					     width="180" height="180" class="fl-qr-code">
 					<p class="fl-qr-label"><?php esc_html_e( 'Scan to pay', 'forgelayer-crypto-payments-for-woocommerce' ); ?></p>
 				</div>
+				<?php endif; ?>
 
 				<div class="fl-payment-info">
 

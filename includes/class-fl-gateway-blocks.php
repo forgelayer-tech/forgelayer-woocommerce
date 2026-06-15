@@ -46,13 +46,13 @@ final class FL_Gateway_Blocks extends AbstractPaymentMethodType {
 		}
 
 		return array(
-			'title'       => isset( $this->settings['title'] )       ? $this->settings['title']       : __( 'Pay with Cryptocurrency', 'forgelayer-woocommerce' ),
+			'title'       => isset( $this->settings['title'] )       ? $this->settings['title']       : __( 'Pay with Cryptocurrency', 'forgelayer-crypto-payments-for-woocommerce' ),
 			'description' => isset( $this->settings['description'] ) ? $this->settings['description'] : '',
 			'options'     => $options,
 			'supports'    => $this->get_supported_features(),
 			'i18n'        => array(
-				'selectNetwork' => __( 'Select network & currency:', 'forgelayer-woocommerce' ),
-				'noOptions'     => __( 'No payment options available. Please contact the store owner.', 'forgelayer-woocommerce' ),
+				'selectNetwork' => __( 'Select network & currency:', 'forgelayer-crypto-payments-for-woocommerce' ),
+				'noOptions'     => __( 'No payment options available. Please contact the store owner.', 'forgelayer-crypto-payments-for-woocommerce' ),
 			),
 		);
 	}

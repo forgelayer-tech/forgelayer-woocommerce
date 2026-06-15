@@ -148,7 +148,7 @@ class FL_Price {
 				'fl_unsupported_currency',
 				sprintf(
 					/* translators: 1: currency code */
-					__( '"%s" is not supported. ForgeLayer accepts payments only when the store currency is one of the CoinGecko-supported fiat currencies.', 'forgelayer-woocommerce' ),
+					__( '"%s" is not supported. ForgeLayer accepts payments only when the store currency is one of the CoinGecko-supported fiat currencies.', 'forgelayer-crypto-payments-for-woocommerce' ),
 					$currency
 				)
 			);

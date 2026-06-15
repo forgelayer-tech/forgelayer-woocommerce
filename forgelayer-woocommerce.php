@@ -6,10 +6,11 @@
  * Version:     1.1.0
  * Author:      ForgeLayer
  * Author URI:  https://forgelayer.io
- * Text Domain: forgelayer-woocommerce
+ * Text Domain: forgelayer-crypto-payments-for-woocommerce
  * Domain Path: /languages
  * Requires at least: 5.8
  * Requires PHP: 7.4
+ * Requires Plugins: woocommerce
  * WC requires at least: 6.0
  * WC tested up to: 9.9
  * License:           GPLv2 or later
@@ -42,7 +43,7 @@ function fl_init_plugin() {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		add_action( 'admin_notices', function () {
 			echo '<div class="error"><p>'
-				. esc_html__( 'ForgeLayer Payments requires WooCommerce to be installed and active.', 'forgelayer-woocommerce' )
+				. esc_html__( 'ForgeLayer Payments requires WooCommerce to be installed and active.', 'forgelayer-crypto-payments-for-woocommerce' )
 				. '</p></div>';
 		} );
 		return;
@@ -124,8 +125,8 @@ function fl_debug_api_key_warning() {
 	$settings = get_option( 'woocommerce_forgelayer_settings', array() );
 	if ( ! empty( $settings['api_key'] ) ) {
 		echo '<div class="notice notice-warning"><p>'
-			. '<strong>' . esc_html__( 'ForgeLayer Security Warning:', 'forgelayer-woocommerce' ) . '</strong> '
-			. esc_html__( 'WP_DEBUG is enabled. Your ForgeLayer API key is stored as plaintext in the database and may appear in debug logs. Disable WP_DEBUG on production sites.', 'forgelayer-woocommerce' )
+			. '<strong>' . esc_html__( 'ForgeLayer Security Warning:', 'forgelayer-crypto-payments-for-woocommerce' ) . '</strong> '
+			. esc_html__( 'WP_DEBUG is enabled. Your ForgeLayer API key is stored as plaintext in the database and may appear in debug logs. Disable WP_DEBUG on production sites.', 'forgelayer-crypto-payments-for-woocommerce' )
 			. '</p></div>';
 	}
 }
@@ -176,15 +177,15 @@ function fl_enqueue_admin_assets( $hook ) {
 		'webhookNonce'  => wp_create_nonce( 'fl_setup_webhook' ),
 		'usageNonce'    => wp_create_nonce( 'fl_refresh_usage' ),
 		'i18n'          => array(
-			'refreshing'         => __( 'Refreshing…', 'forgelayer-woocommerce' ),
-			'refreshDone'        => __( 'Done! Reloading page…', 'forgelayer-woocommerce' ),
-			'refreshError'       => __( 'Error refreshing tokens. Check your API key.', 'forgelayer-woocommerce' ),
-			'webhookRegistering' => __( 'Registering webhook…', 'forgelayer-woocommerce' ),
-			'webhookDone'        => __( 'Webhook registered! ID: ', 'forgelayer-woocommerce' ),
-			'webhookError'       => __( 'Error registering webhook: ', 'forgelayer-woocommerce' ),
-			'usageRefreshing'    => __( 'Refreshing usage…', 'forgelayer-woocommerce' ),
-			'usageDone'          => __( 'Updated. Reloading…', 'forgelayer-woocommerce' ),
-			'usageError'         => __( 'Could not fetch usage. Check your API key.', 'forgelayer-woocommerce' ),
+			'refreshing'         => __( 'Refreshing…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'refreshDone'        => __( 'Done! Reloading page…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'refreshError'       => __( 'Error refreshing tokens. Check your API key.', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'webhookRegistering' => __( 'Registering webhook…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'webhookDone'        => __( 'Webhook registered! ID: ', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'webhookError'       => __( 'Error registering webhook: ', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'usageRefreshing'    => __( 'Refreshing usage…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'usageDone'          => __( 'Updated. Reloading…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'usageError'         => __( 'Could not fetch usage. Check your API key.', 'forgelayer-crypto-payments-for-woocommerce' ),
 		),
 	) );
 }
@@ -320,12 +321,12 @@ function fl_enqueue_assets() {
 	wp_localize_script( 'fl-checkout', 'flCheckout', array(
 		'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 		'i18n'    => array(
-			'copied'    => __( 'Copied!', 'forgelayer-woocommerce' ),
-			'copy'      => __( 'Copy', 'forgelayer-woocommerce' ),
-			'checking'  => __( 'Checking payment…', 'forgelayer-woocommerce' ),
-			'received'  => __( 'Payment received! Confirming…', 'forgelayer-woocommerce' ),
-			'confirmed' => __( 'Payment confirmed! Redirecting…', 'forgelayer-woocommerce' ),
-			'expired'   => __( 'Payment window expired.', 'forgelayer-woocommerce' ),
+			'copied'    => __( 'Copied!', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'copy'      => __( 'Copy', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'checking'  => __( 'Checking payment…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'received'  => __( 'Payment received! Confirming…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'confirmed' => __( 'Payment confirmed! Redirecting…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'expired'   => __( 'Payment window expired.', 'forgelayer-crypto-payments-for-woocommerce' ),
 		),
 	) );
 }
@@ -430,12 +431,12 @@ function fl_ajax_check_payment() {
 // WP-Cron: register all intervals used by this plugin
 // -------------------------------------------------------------------------
 add_filter( 'cron_schedules', function ( $schedules ) {
-	$schedules['fl_1_minute']    = array( 'interval' => 60,   'display' => __( 'Every 1 Minute',   'forgelayer-woocommerce' ) );
-	$schedules['fl_2_minutes']   = array( 'interval' => 120,  'display' => __( 'Every 2 Minutes',  'forgelayer-woocommerce' ) );
-	$schedules['fl_five_minutes'] = array( 'interval' => 300, 'display' => __( 'Every 5 Minutes',  'forgelayer-woocommerce' ) );
-	$schedules['fl_10_minutes']  = array( 'interval' => 600,  'display' => __( 'Every 10 Minutes', 'forgelayer-woocommerce' ) );
-	$schedules['fl_15_minutes']  = array( 'interval' => 900,  'display' => __( 'Every 15 Minutes', 'forgelayer-woocommerce' ) );
-	$schedules['fl_30_minutes']  = array( 'interval' => 1800, 'display' => __( 'Every 30 Minutes', 'forgelayer-woocommerce' ) );
+	$schedules['fl_1_minute']    = array( 'interval' => 60,   'display' => __( 'Every 1 Minute',   'forgelayer-crypto-payments-for-woocommerce' ) );
+	$schedules['fl_2_minutes']   = array( 'interval' => 120,  'display' => __( 'Every 2 Minutes',  'forgelayer-crypto-payments-for-woocommerce' ) );
+	$schedules['fl_five_minutes'] = array( 'interval' => 300, 'display' => __( 'Every 5 Minutes',  'forgelayer-crypto-payments-for-woocommerce' ) );
+	$schedules['fl_10_minutes']  = array( 'interval' => 600,  'display' => __( 'Every 10 Minutes', 'forgelayer-crypto-payments-for-woocommerce' ) );
+	$schedules['fl_15_minutes']  = array( 'interval' => 900,  'display' => __( 'Every 15 Minutes', 'forgelayer-crypto-payments-for-woocommerce' ) );
+	$schedules['fl_30_minutes']  = array( 'interval' => 1800, 'display' => __( 'Every 30 Minutes', 'forgelayer-crypto-payments-for-woocommerce' ) );
 	return $schedules;
 } );
 
@@ -521,9 +522,9 @@ function fl_evaluate_usage_alerts( $usage_data, $settings ) {
 	$reset_at    = isset( $usage_data['usage']['resetAt'] ) ? $usage_data['usage']['resetAt'] : '';
 
 	$resources = array(
-		'addresses'   => __( 'Wallet Addresses', 'forgelayer-woocommerce' ),
-		'webhooks'    => __( 'Webhooks', 'forgelayer-woocommerce' ),
-		'apiRequests' => __( 'API Requests', 'forgelayer-woocommerce' ),
+		'addresses'   => __( 'Wallet Addresses', 'forgelayer-crypto-payments-for-woocommerce' ),
+		'webhooks'    => __( 'Webhooks', 'forgelayer-crypto-payments-for-woocommerce' ),
+		'apiRequests' => __( 'API Requests', 'forgelayer-crypto-payments-for-woocommerce' ),
 	);
 
 	// Thresholds in ascending order — we track the highest one already emailed
@@ -540,7 +541,7 @@ function fl_evaluate_usage_alerts( $usage_data, $settings ) {
 
 	$admin_email  = get_option( 'admin_email' );
 	$settings_url = admin_url( 'admin.php?page=wc-settings&tab=checkout&section=forgelayer' );
-	$reset_label  = $reset_at ? date_i18n( get_option( 'date_format' ), strtotime( $reset_at ) ) : __( 'your next billing cycle', 'forgelayer-woocommerce' );
+	$reset_label  = $reset_at ? date_i18n( get_option( 'date_format' ), strtotime( $reset_at ) ) : __( 'your next billing cycle', 'forgelayer-crypto-payments-for-woocommerce' );
 
 	foreach ( $resources as $key => $label ) {
 		$pct   = (int) ( $percentages[ $key ] ?? 0 );
@@ -562,20 +563,20 @@ function fl_evaluate_usage_alerts( $usage_data, $settings ) {
 
 			// Send the email
 			$subject = $threshold >= 100
-				? sprintf( __( '[Action Required] ForgeLayer %s limit reached', 'forgelayer-woocommerce' ), $label )
-				: sprintf( __( '[Warning] ForgeLayer %s at %d%%', 'forgelayer-woocommerce' ), $label, $pct );
+				? sprintf( __( '[Action Required] ForgeLayer %s limit reached', 'forgelayer-crypto-payments-for-woocommerce' ), $label )
+				: sprintf( __( '[Warning] ForgeLayer %s at %d%%', 'forgelayer-crypto-payments-for-woocommerce' ), $label, $pct );
 
 			$impact = '';
 			if ( $key === 'apiRequests' && $threshold >= 100 ) {
-				$impact = __( "\nIMPACT: Cryptocurrency checkout is now disabled. Customers cannot pay with crypto until this resets.", 'forgelayer-woocommerce' );
+				$impact = __( "\nIMPACT: Cryptocurrency checkout is now disabled. Customers cannot pay with crypto until this resets.", 'forgelayer-crypto-payments-for-woocommerce' );
 			} elseif ( $key === 'addresses' && $threshold >= 100 ) {
-				$impact = __( "\nIMPACT: No new wallet addresses can be generated. Customers may be unable to check out with crypto (address reuse may still work).", 'forgelayer-woocommerce' );
+				$impact = __( "\nIMPACT: No new wallet addresses can be generated. Customers may be unable to check out with crypto (address reuse may still work).", 'forgelayer-crypto-payments-for-woocommerce' );
 			} elseif ( $key === 'webhooks' && $threshold >= 100 ) {
-				$impact = __( "\nIMPACT: No new webhooks can be registered. Payment confirmation will fall back to polling.", 'forgelayer-woocommerce' );
+				$impact = __( "\nIMPACT: No new webhooks can be registered. Payment confirmation will fall back to polling.", 'forgelayer-crypto-payments-for-woocommerce' );
 			}
 
 			$body = sprintf(
-				__( "Your ForgeLayer %1\$s usage has reached %2\$d%%.\n\nCurrent usage : %3\$d / %4\$d\nResets on     : %5\$s%6\$s\n\nLog into your ForgeLayer dashboard to upgrade your plan or manage your usage.\n\nForgeLayer Settings: %7\$s", 'forgelayer-woocommerce' ),
+				__( "Your ForgeLayer %1\$s usage has reached %2\$d%%.\n\nCurrent usage : %3\$d / %4\$d\nResets on     : %5\$s%6\$s\n\nLog into your ForgeLayer dashboard to upgrade your plan or manage your usage.\n\nForgeLayer Settings: %7\$s", 'forgelayer-crypto-payments-for-woocommerce' ),
 				$label,
 				$pct,
 				$usage_data['usage'][ $key === 'addresses' ? 'addressesGenerated' : ( $key === 'webhooks' ? 'webhooksCreated' : 'apiRequestsMade' ) ] ?? 0,

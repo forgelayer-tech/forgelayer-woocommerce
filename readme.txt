@@ -1,5 +1,5 @@
 === ForgeLayer Crypto Payments for WooCommerce ===
-Contributors: forgelayer
+Contributors: forgelayer01
 Tags: woocommerce, cryptocurrency, bitcoin, ethereum, payment-gateway
 Requires at least: 5.8
 Tested up to: 7.0
@@ -122,6 +122,31 @@ This means the WP-Cron price cache has not been populated yet. Save your setting
 4. **Gateway settings — chain & token management** — per-chain enable toggles with token checkboxes and the Refresh Token List button.
 5. **Account usage dashboard** — real-time usage bars for wallet addresses, webhooks, and API requests.
 6. **Admin notice — usage warning** — contextual notice when a resource approaches its plan limit.
+
+== External services ==
+
+This plugin connects to the following external services:
+
+= ForgeLayer API (api.forgelayer.io) =
+
+Used for all core payment functions: generating blockchain deposit addresses, registering webhooks, and verifying payment confirmations. The store's ForgeLayer API key and order-related data (amount, currency, chain, token) are sent when a customer initiates checkout. This service is required for the plugin to function.
+
+* [ForgeLayer Terms of Service](https://forgelayer.io/terms)
+* [ForgeLayer Privacy Policy](https://forgelayer.io/privacy)
+
+= CoinGecko (api.coingecko.com) =
+
+Used to fetch current cryptocurrency prices for fiat-to-crypto conversion. Only coin IDs and the store's fiat currency are sent — no customer or order data is transmitted. Prices are cached server-side by WP-Cron; CoinGecko is not called during individual customer checkouts under normal operation.
+
+* [CoinGecko Terms of Service](https://www.coingecko.com/en/terms)
+* [CoinGecko Privacy Policy](https://www.coingecko.com/en/privacy)
+
+= QRServer (api.qrserver.com) — optional =
+
+Used to generate QR code images on the payment page. **Disabled by default.** Merchants can enable it under WooCommerce > Settings > Payments > ForgeLayer > Show QR Codes. When enabled, the blockchain wallet address (not customer personal data) is sent to api.qrserver.com to render a QR image.
+
+* [QRServer Terms of Service](https://goqr.me/terms/)
+* [QRServer Privacy Policy](https://goqr.me/privacy/)
 
 == Changelog ==
 

@@ -157,4 +157,15 @@ jQuery( function ( $ ) {
 			fetchUsage();
 		} );
 	}
+
+	// Token search filter
+	var $tokenSearch = $( '#fl-token-search' );
+	if ( $tokenSearch.length ) {
+		$tokenSearch.on( 'input', function () {
+			var q = $( this ).val().toLowerCase();
+			$( '.fl-token-row' ).each( function () {
+				$( this ).toggle( $( this ).text().toLowerCase().indexOf( q ) !== -1 );
+			} );
+		} );
+	}
 } );
