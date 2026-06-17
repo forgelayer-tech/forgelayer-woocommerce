@@ -1150,12 +1150,12 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		// Normalize to lowercase — ForgeLayer webhooks send lowercase hex but the API
 		// may return checksummed addresses (mixed case) when an address was generated.
-		$address  = strtolower( sanitize_text_field( isset( $data['address'] )  ? $data['address']  : '' ) );
+		$address  = $this->normalize_address( sanitize_text_field( isset( $data['address'] )  ? $data['address']  : '' ) );
 		$user_ref = sanitize_text_field( isset( $data['userRef'] )  ? $data['userRef']  : ( isset( $data['user_ref'] ) ? $data['user_ref'] : '' ) );
 		$amount   = sanitize_text_field( isset( $data['amount'] )   ? $data['amount']   : ( isset( $data['balance'] ) ? $data['balance'] : '' ) );
 		$tx_hash  = sanitize_text_field( isset( $data['txHash'] )   ? $data['txHash']   : ( isset( $data['txid'] ) ? $data['txid'] : ( isset( $data['tx_hash'] ) ? $data['tx_hash'] : '' ) ) );
 		// 'asset' is the deposited token contract address (empty string for native coins).
-		$asset    = strtolower( sanitize_text_field( isset( $data['asset'] ) ? $data['asset'] : '' ) );
+		$asset    = $this->normalize_address( sanitize_text_field( isset( $data['asset'] ) ? $data['asset'] : '' ) );
 		// 'type' distinguishes native-coin deposits (BTC/ETH/BNB/TRX) from token deposits.
 		$deposit_type = sanitize_text_field( isset( $data['type'] ) ? $data['type'] : '' );
 
@@ -1224,7 +1224,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		// Verify the deposited asset matches what this order expects.
 		// Use 'type' (native|token) first — it's always present and unambiguous.
 		// Fall back to comparing contract addresses when type is absent.
-		$expected_contract = strtolower( (string) $order->get_meta( '_fl_token_contract' ) );
+		$expected_contract = $this->normalize_address( (string) $order->get_meta( '_fl_token_contract' ) );
 		$order_is_token    = ! empty( $expected_contract );
 		$asset_mismatch    = false;
 
@@ -1705,7 +1705,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$expires_at = time() + ( $window * 60 );
 
 		// Defensive sanitization of all order meta values before storage
-		$order->update_meta_data( '_fl_address',           strtolower( sanitize_text_field( $address ) ) );
+		$order->update_meta_data( '_fl_address',           $this->normalize_address( sanitize_text_field( $address ) ) );
 		$order->update_meta_data( '_fl_chain',             sanitize_text_field( $chain_id ) );
 		$order->update_meta_data( '_fl_token_key',         sanitize_text_field( $token_key ) );
 		$order->update_meta_data( '_fl_token_symbol',      sanitize_text_field( $token_info['symbol'] ) );
@@ -2233,6 +2233,21 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		// 3. No match — price lookup will fail gracefully
 		return '';
+	}
+
+	/**
+	 * Normalize a blockchain address to a canonical form for storage and comparison.
+	 *
+	 * EVM addresses (Ethereum, BSC) are hex strings — case-insensitive, safe to lowercase.
+	 * Tron and Bitcoin use Base58Check encoding — case-sensitive, must be preserved.
+	 *
+	 * @param  string $address
+	 * @return string
+	 */
+	private function normalize_address( $address ) {
+		// 0x-prefixed = EVM chain (Ethereum / BSC) → lowercase is safe and canonical.
+		// Everything else (Tron T-addresses, Bitcoin Base58) is case-sensitive — leave as-is.
+		return ( strncmp( $address, '0x', 2 ) === 0 ) ? strtolower( $address ) : $address;
 	}
 
 	/**
