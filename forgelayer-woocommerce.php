@@ -3,7 +3,7 @@
  * Plugin Name: ForgeLayer Crypto Payments for WooCommerce
  * Plugin URI:  https://github.com/forgelayer-tech/forgelayer-woocommerce
  * Description: Accept Bitcoin, Ethereum, BSC, and Tron cryptocurrency payments at checkout via ForgeLayer.
- * Version:     1.1.0
+ * Version:     1.1.1
  * Author:      ForgeLayer
  * Author URI:  https://forgelayer.io
  * Text Domain: forgelayer-crypto-payments-for-woocommerce
@@ -19,7 +19,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'FL_PLUGIN_VERSION', '1.1.0' );
+define( 'FL_PLUGIN_VERSION', '1.1.1' );
 define( 'FL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FL_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 

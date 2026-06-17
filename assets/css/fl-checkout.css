@@ -160,13 +160,17 @@
 	line-height: 1.5;
 }
 
-/* ── QR + info side by side ────────────────────────────────────────────────*/
+/* ── Payment details layout ────────────────────────────────────────────────*/
 .fl-payment-details {
 	display: grid;
-	grid-template-columns: 180px 1fr;
+	grid-template-columns: 1fr;
 	gap: 22px;
-	margin-bottom: 0;          /* removed — meta-row sits flush at bottom */
 	align-items: start;
+}
+
+/* Side-by-side only when QR code is present */
+.fl-payment-details.fl-has-qr {
+	grid-template-columns: 180px 1fr;
 }
 
 .fl-qr-container {
@@ -354,7 +358,7 @@
 }
 
 .fl-payment-confirmed::before {
-	content: 'Payment confirmed';
+	content: '✓';
 	font-size: 1.3em;
 	font-weight: 700;
 }
@@ -365,7 +369,7 @@
 		padding: 18px 14px;
 	}
 
-	.fl-payment-details {
+	.fl-payment-details.fl-has-qr {
 		grid-template-columns: 1fr;
 	}
 

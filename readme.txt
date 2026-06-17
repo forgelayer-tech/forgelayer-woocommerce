@@ -3,7 +3,7 @@ Contributors: forgelayer01
 Tags: woocommerce, cryptocurrency, bitcoin, ethereum, payment-gateway
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -149,6 +149,17 @@ Used to generate QR code images on the payment page. **Disabled by default.** Me
 * [QRServer Privacy Policy](https://goqr.me/privacy/)
 
 == Changelog ==
+
+= 1.1.1 =
+* Fix: webhook order lookup now matches by address only (ForgeLayer never populates userRef); userRef fast-path removed.
+* Fix: deposit addresses are stored and queried in lowercase to prevent case-mismatch with checksummed EVM addresses returned by the API.
+* Fix: webhook validates received asset against the order's stored token contract address; wrong-token deposits are ignored.
+* Fix: removed 1% payment tolerance — received amount must equal or exceed the displayed amount; partial payments stay pending until a top-up webhook arrives.
+* Fix: txid deduplication transient extended from 1 day to 7 days; added per-order _fl_tx_seen_ meta as a permanent backstop against double-counting after transient expiry.
+* Fix: verify_payment is now a pure database reader — removed balance API call; all confirmation is handled exclusively by the webhook.
+* Fix: payment layout no longer collapses into the 180 px QR column when QR codes are disabled; two-column grid only activates with the fl-has-qr class.
+* Fix: added BTC, ETH, BNB, TRX to $coingecko_map so native-coin price lookups go through the documented path; removed defunct FTT entry.
+* Fix: confirmed payment banner now shows a checkmark icon instead of duplicate "Payment confirmed" text.
 
 = 1.1.0 =
 * Security: added IP-based progressive lockout on the payment poll AJAX endpoint (3 strikes = 60s, 10 strikes = 1h).

@@ -53,15 +53,17 @@ class FL_Gateway extends WC_Payment_Gateway {
 	);
 
 	/**
-	 * Known symbol → CoinGecko ID mappings for price conversion.
-	 * Tokens not in this map will display fiat amount only.
-	 */
-	/**
 	 * Symbol → CoinGecko ID for all tokens with automatic price conversion.
 	 * Any token NOT in this map will show "Calculating..." at checkout unless
 	 * the merchant adds it via the custom CoinGecko ID field in settings.
+	 * Must stay in sync with FL_Price::ALL_COIN_IDS (the batch fetch list).
 	 */
 	private static $coingecko_map = array(
+		// ── Native chain coins ────────────────────────────────────────────────
+		'BTC'    => 'bitcoin',
+		'ETH'    => 'ethereum',
+		'BNB'    => 'binancecoin',
+		'TRX'    => 'tron',
 		// ── Stablecoins ──────────────────────────────────────────────────────
 		'USDT'   => 'tether',
 		'USDC'   => 'usd-coin',
@@ -108,7 +110,6 @@ class FL_Gateway extends WC_Payment_Gateway {
 		'IMX'    => 'immutable-x',
 		// ── Exchange tokens ───────────────────────────────────────────────────
 		'CRO'    => 'crypto-com-chain',
-		'FTT'    => 'ftx-token',
 		// ── BSC-native ────────────────────────────────────────────────────────
 		'CAKE'   => 'pancakeswap-token',
 		'XVS'    => 'venus',
@@ -1139,7 +1140,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		}
 
 		// Normalise payload — handle top-level or nested data key
-		$event = sanitize_text_field( isset( $payload['event'] ) ? $payload['event'] : ( isset( $payload['type'] ) ? $payload['type'] : '' ) );
+		$event = sanitize_text_field( isset( $payload['event'] ) ? $payload['event'] : '' );
 		$data  = isset( $payload['data'] ) && is_array( $payload['data'] ) ? $payload['data'] : $payload;
 
 		if ( $event !== 'deposit_confirmed' ) {
@@ -1147,10 +1148,16 @@ class FL_Gateway extends WC_Payment_Gateway {
 			return rest_ensure_response( array( 'received' => true ) );
 		}
 
-		$address  = sanitize_text_field( isset( $data['address'] )  ? $data['address']  : '' );
+		// Normalize to lowercase — ForgeLayer webhooks send lowercase hex but the API
+		// may return checksummed addresses (mixed case) when an address was generated.
+		$address  = strtolower( sanitize_text_field( isset( $data['address'] )  ? $data['address']  : '' ) );
 		$user_ref = sanitize_text_field( isset( $data['userRef'] )  ? $data['userRef']  : ( isset( $data['user_ref'] ) ? $data['user_ref'] : '' ) );
 		$amount   = sanitize_text_field( isset( $data['amount'] )   ? $data['amount']   : ( isset( $data['balance'] ) ? $data['balance'] : '' ) );
 		$tx_hash  = sanitize_text_field( isset( $data['txHash'] )   ? $data['txHash']   : ( isset( $data['txid'] ) ? $data['txid'] : ( isset( $data['tx_hash'] ) ? $data['tx_hash'] : '' ) ) );
+		// 'asset' is the deposited token contract address (empty string for native coins).
+		$asset    = strtolower( sanitize_text_field( isset( $data['asset'] ) ? $data['asset'] : '' ) );
+		// 'type' distinguishes native-coin deposits (BTC/ETH/BNB/TRX) from token deposits.
+		$deposit_type = sanitize_text_field( isset( $data['type'] ) ? $data['type'] : '' );
 
 		fl_log_warning(
 			sprintf( 'ForgeLayer webhook received: event=%s address=%s userRef=%s amount=%s txHash=%s', $event, $address, $user_ref, $amount, $tx_hash ),
@@ -1158,38 +1165,35 @@ class FL_Gateway extends WC_Payment_Gateway {
 		);
 
 		// ── Replay attack prevention: txHash deduplication ────────────────────
-		// Reject payloads with a txHash we have already processed within 24 hours.
+		// Reject payloads with a txHash we have already processed. Use a 7-day transient
+		// as a fast global cache; order-level meta is the durable long-term backstop.
 		if ( $tx_hash ) {
 			$tx_key = 'fl_txhash_' . md5( $tx_hash );
 			if ( get_transient( $tx_key ) ) {
 				fl_log_warning(
-					sprintf( 'ForgeLayer webhook: duplicate txHash %s rejected.', $tx_hash ),
+					sprintf( 'ForgeLayer webhook: duplicate txHash %s rejected (transient).', $tx_hash ),
 					array( 'source' => 'forgelayer' )
 				);
 				return rest_ensure_response( array( 'received' => true, 'note' => 'duplicate_tx' ) );
 			}
-			// Mark this txHash as seen for 24 hours
-			set_transient( $tx_key, 1, DAY_IN_SECONDS );
+			set_transient( $tx_key, 1, WEEK_IN_SECONDS );
 		}
 
-		// Find the WooCommerce order
+		// Find the WooCommerce order by address (pending/on-hold only).
+		// ForgeLayer does not echo userRef back in webhook payloads, so address is the
+		// only reliable identifier. Address is always stored and queried as lowercase.
 		$order = null;
 
-		// 1. Fast path: userRef was set to the WC order ID when the address was generated
-		if ( $user_ref && is_numeric( $user_ref ) ) {
-			$candidate = wc_get_order( (int) $user_ref );
-			if ( $candidate && $candidate->get_payment_method() === $this->id ) {
-				$order = $candidate;
-			}
-		}
-
-		// 2. Fallback: search by stored address meta
-		if ( ! $order && $address ) {
+		if ( $address ) {
 			$matches = wc_get_orders( array(
 				'payment_method' => $this->id,
+				'status'         => array( 'pending', 'on-hold' ),
 				'limit'          => 1,
-				'meta_key'       => '_fl_address',
-				'meta_value'     => $address,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'meta_query'     => array(
+					array( 'key' => '_fl_address', 'value' => $address, 'compare' => '=' ),
+				),
 			) );
 			if ( ! empty( $matches ) ) {
 				$order = $matches[0];
@@ -1205,11 +1209,11 @@ class FL_Gateway extends WC_Payment_Gateway {
 			return rest_ensure_response( array( 'received' => true, 'note' => 'order_not_found' ) );
 		}
 
-		// Order already fulfilled — check for a duplicate payment on the same address
+		// Order already fulfilled — check for a duplicate payment on the same address.
 		if ( in_array( $order->get_status(), array( 'processing', 'completed' ), true ) ) {
 			$original_tx = $order->get_meta( '_fl_tx_hash' );
 
-			// Only alert if this is a different transaction (not a ForgeLayer webhook retry)
+			// Only alert if this is genuinely a different transaction.
 			if ( $tx_hash && $original_tx && $tx_hash !== $original_tx ) {
 				$this->handle_duplicate_payment( $order, $amount, $tx_hash );
 			}
@@ -1217,17 +1221,49 @@ class FL_Gateway extends WC_Payment_Gateway {
 			return rest_ensure_response( array( 'received' => true, 'note' => 'already_confirmed' ) );
 		}
 
+		// Verify the deposited asset matches what this order expects.
+		// Use 'type' (native|token) first — it's always present and unambiguous.
+		// Fall back to comparing contract addresses when type is absent.
+		$expected_contract = strtolower( (string) $order->get_meta( '_fl_token_contract' ) );
+		$order_is_token    = ! empty( $expected_contract );
+		$asset_mismatch    = false;
+
+		if ( $deposit_type === 'native' && $order_is_token ) {
+			// Native-coin deposit on a token order (e.g. BNB sent to USDT address).
+			$asset_mismatch = true;
+		} elseif ( $deposit_type === 'token' && ! $order_is_token ) {
+			// Token deposit on a native-coin order (e.g. USDT sent to BNB address).
+			$asset_mismatch = true;
+		} elseif ( $deposit_type === 'token' && $order_is_token && $asset !== $expected_contract ) {
+			// Correct type but wrong token contract (e.g. USDC sent to a USDT order).
+			$asset_mismatch = true;
+		}
+
+		if ( $asset_mismatch ) {
+			fl_log_warning(
+				sprintf(
+					'ForgeLayer webhook: asset mismatch for order #%d — expected contract "%s" (type=%s), got asset "%s" type="%s". Ignoring.',
+					$order->get_id(), $expected_contract, $order_is_token ? 'token' : 'native', $asset, $deposit_type
+				),
+				array( 'source' => 'forgelayer' )
+			);
+			return rest_ensure_response( array( 'received' => true, 'note' => 'asset_mismatch' ) );
+		}
+
 		// Late payment — order was cancelled after the window expired
 		$is_late   = in_array( $order->get_status(), array( 'cancelled' ), true )
 			&& $order->get_meta( '_fl_payment_status' ) === 'expired';
 		$expires_at_stored = (int) $order->get_meta( '_fl_expires_at' );
 
-		// Always accumulate received amount first so admin always sees accurate totals
+		// Always accumulate received amount first so admin always sees accurate totals.
+		// Guard against double-counting the same txid if the global transient has expired.
 		$expected_amount     = $order->get_meta( '_fl_crypto_amount' );
 		$previously_received = (float) ( $order->get_meta( '_fl_received_amount' ) ?: 0 );
-		$total_received      = $amount ? $previously_received + (float) $amount : $previously_received;
-		if ( $amount ) {
+		$tx_already_counted  = $tx_hash && $order->get_meta( '_fl_tx_seen_' . md5( $tx_hash ) );
+		$total_received      = ( $amount && ! $tx_already_counted ) ? $previously_received + (float) $amount : $previously_received;
+		if ( $amount && ! $tx_already_counted ) {
 			$order->update_meta_data( '_fl_received_amount', (string) $total_received );
+			$order->update_meta_data( '_fl_tx_seen_' . md5( $tx_hash ?: '' ), '1' );
 			$order->save();
 		}
 
@@ -1240,8 +1276,16 @@ class FL_Gateway extends WC_Payment_Gateway {
 			// Within grace period — fall through to confirm below
 		}
 
-		// Verify amount if we have a stored expected value
-		if ( $expected_amount && $amount ) {
+		// Verify amount if we have a stored expected value.
+		// A webhook with no amount field must not auto-confirm — it carries no proof of payment.
+		if ( $expected_amount ) {
+			if ( ! $amount ) {
+				fl_log_warning(
+					sprintf( 'ForgeLayer webhook: no amount in payload for order #%d — skipping confirmation.', $order->get_id() ),
+					array( 'source' => 'forgelayer' )
+				);
+				return rest_ensure_response( array( 'received' => true, 'note' => 'missing_amount' ) );
+			}
 
 			$sufficient = function_exists( 'bccomp' )
 				? bccomp( number_format( $total_received, 18, '.', '' ), number_format( (float) $expected_amount, 18, '.', '' ), 18 ) >= 0
@@ -1579,11 +1623,10 @@ class FL_Gateway extends WC_Payment_Gateway {
 			return array( 'result' => 'failure' );
 		}
 
-		$api             = new FL_API( $api_key );
-		$address         = '';
-		$address_id      = '';
-		$starting_balance = 0.0;
-		$reused          = false;
+		$api        = new FL_API( $api_key );
+		$address    = '';
+		$address_id = '';
+		$reused     = false;
 
 		// Try to reuse an inactive address if the merchant enabled the option
 		if ( $this->get_option( 'reuse_addresses' ) === 'yes' ) {
@@ -1593,14 +1636,6 @@ class FL_Gateway extends WC_Payment_Gateway {
 				$address    = $existing['address'];
 				$address_id = $existing['address_id'];
 				$reused     = true;
-
-				// Snapshot current balance so old funds never trigger a false confirmation
-				$token_contract = isset( $token_info['contract'] ) ? $token_info['contract'] : '';
-				$token_decimals = isset( $token_info['decimals'] ) ? (int) $token_info['decimals'] : 18;
-				$bal_result = $api->check_balance( $address, $chain_id, $token_contract, $token_decimals );
-				if ( ! is_wp_error( $bal_result ) ) {
-					$starting_balance = (float) ( isset( $bal_result['balance'] ) ? $bal_result['balance'] : ( isset( $bal_result['amount'] ) ? $bal_result['amount'] : 0 ) );
-				}
 			}
 		}
 
@@ -1670,7 +1705,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$expires_at = time() + ( $window * 60 );
 
 		// Defensive sanitization of all order meta values before storage
-		$order->update_meta_data( '_fl_address',           sanitize_text_field( $address ) );
+		$order->update_meta_data( '_fl_address',           strtolower( sanitize_text_field( $address ) ) );
 		$order->update_meta_data( '_fl_chain',             sanitize_text_field( $chain_id ) );
 		$order->update_meta_data( '_fl_token_key',         sanitize_text_field( $token_key ) );
 		$order->update_meta_data( '_fl_token_symbol',      sanitize_text_field( $token_info['symbol'] ) );
@@ -1680,7 +1715,6 @@ class FL_Gateway extends WC_Payment_Gateway {
 		$order->update_meta_data( '_fl_expires_at',        absint( $expires_at ) );
 		$order->update_meta_data( '_fl_address_id',        sanitize_text_field( $address_id ) ); // Internal ID — never rendered in HTML
 		$order->update_meta_data( '_fl_payment_status',    'pending' );
-		$order->update_meta_data( '_fl_starting_balance',  (float) $starting_balance );
 		$order->update_meta_data( '_fl_address_reused',    $reused ? 'yes' : 'no' );
 		$order->save();
 
@@ -1688,11 +1722,9 @@ class FL_Gateway extends WC_Payment_Gateway {
 
 		if ( $reused ) {
 			$order->add_order_note( sprintf(
-				__( 'ForgeLayer address reused: %1$s on %2$s (starting balance: %3$s %4$s). Expecting additional %5$s %4$s.', 'forgelayer-crypto-payments-for-woocommerce' ),
+				__( 'ForgeLayer address reused: %1$s on %2$s. Expecting %3$s %4$s.', 'forgelayer-crypto-payments-for-woocommerce' ),
 				esc_html( $address ), esc_html( $chain_id ),
-				esc_html( number_format( $starting_balance, 8, '.', '' ) ),
-				esc_html( $token_info['symbol'] ),
-				esc_html( $crypto_amount )
+				esc_html( $crypto_amount ), esc_html( $token_info['symbol'] )
 			) );
 		} else {
 			$order->add_order_note( sprintf(
@@ -1772,9 +1804,10 @@ class FL_Gateway extends WC_Payment_Gateway {
 			</div>
 			<?php endif; ?>
 
-			<div class="fl-payment-details">
+			<?php $qr_enabled = $this->get_option( 'qr_codes_enabled', 'no' ) === 'yes'; ?>
+			<div class="fl-payment-details<?php echo $qr_enabled ? ' fl-has-qr' : ''; ?>">
 
-				<?php if ( $this->get_option( 'qr_codes_enabled', 'no' ) === 'yes' ) : ?>
+				<?php if ( $qr_enabled ) : ?>
 				<div class="fl-qr-container">
 					<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<?php echo rawurlencode( $address ); ?>"
 					     alt="<?php esc_attr_e( 'Payment QR Code', 'forgelayer-crypto-payments-for-woocommerce' ); ?>"
@@ -1899,13 +1932,12 @@ class FL_Gateway extends WC_Payment_Gateway {
 	public function verify_payment( $order ) {
 		$address        = $order->get_meta( '_fl_address' );
 		$chain_id       = $order->get_meta( '_fl_chain' );
-		$token_contract = $order->get_meta( '_fl_token_contract' );
-		$token_decimals = (int) ( $order->get_meta( '_fl_token_decimals' ) ?: 18 );
 		$crypto_amount  = $order->get_meta( '_fl_crypto_amount' );
 		$expires_at     = (int) $order->get_meta( '_fl_expires_at' );
 		$payment_status = $order->get_meta( '_fl_payment_status' );
 
-		// If price lookup failed at checkout time, retry it now
+		// If price lookup failed at checkout time, retry it now so the payment
+		// page can display the correct crypto amount to the customer.
 		if ( empty( $crypto_amount ) ) {
 			$token_key    = $order->get_meta( '_fl_token_key' );
 			$token_symbol = $order->get_meta( '_fl_token_symbol' );
@@ -1933,6 +1965,7 @@ class FL_Gateway extends WC_Payment_Gateway {
 			return array( 'status' => 'error', 'message' => 'Missing payment data.' );
 		}
 
+		// Webhook already confirmed this order — just read the DB status.
 		if ( in_array( $order->get_status(), array( 'processing', 'completed' ), true ) ) {
 			return array(
 				'status'   => 'confirmed',
@@ -1941,104 +1974,24 @@ class FL_Gateway extends WC_Payment_Gateway {
 			);
 		}
 
-		$is_expired = $expires_at && time() > $expires_at;
-
-		if ( $is_expired ) {
-			// Mark the order cancelled if not already done
+		// Payment window closed — mark cancelled and stop polling.
+		// Late payments within the grace period are confirmed by the webhook, not here.
+		if ( $expires_at && time() > $expires_at ) {
 			if ( $payment_status !== 'expired' ) {
 				$order->update_meta_data( '_fl_payment_status', 'expired' );
 				$order->save();
 				$order->update_status( 'cancelled', __( 'ForgeLayer: payment window expired.', 'forgelayer-crypto-payments-for-woocommerce' ) );
-				$payment_status = 'expired';
 			}
-
-			// AJAX frontend poll: always stop — don't keep checking after expiry
-			// WP-Cron path: continue only if within the grace period
-			$called_from_cron = ! defined( 'DOING_AJAX' ) || ! DOING_AJAX;
-			if ( ! $called_from_cron || ! $this->is_within_grace_period( $expires_at ) ) {
-				return array( 'status' => 'expired', 'message' => __( 'Payment window has expired.', 'forgelayer-crypto-payments-for-woocommerce' ) );
-			}
-			// Within grace period and called from cron — fall through to balance check
+			return array( 'status' => 'expired', 'message' => __( 'Payment window has expired.', 'forgelayer-crypto-payments-for-woocommerce' ) );
 		}
 
-		$api_key = $this->get_option( 'api_key' );
-		if ( ! $api_key ) {
-			return array( 'status' => 'pending', 'message' => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ) );
-		}
-
-		$api    = new FL_API( $api_key );
-		$result = $api->check_balance( $address, $chain_id, $token_contract, $token_decimals );
-
-		if ( is_wp_error( $result ) ) {
-			return array( 'status' => 'pending', 'message' => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ) );
-		}
-
-		$raw_balance = 0.0;
-		if ( isset( $result['balance'] ) ) {
-			$raw_balance = (float) $result['balance'];
-		} elseif ( isset( $result['amount'] ) ) {
-			$raw_balance = (float) $result['amount'];
-		}
-
-		// For reused addresses, only count funds received AFTER this order was assigned
-		$starting_balance = (float) ( $order->get_meta( '_fl_starting_balance' ) ?: 0 );
-		$balance          = max( 0.0, $raw_balance - $starting_balance );
-
-		$expected = (float) $crypto_amount; // empty string casts to 0.0 — guard below handles it
-
-		// Use bccomp for precise decimal comparison (exact match required)
-		$balance_str  = number_format( $balance,  18, '.', '' );
-		$expected_str = number_format( $expected, 18, '.', '' );
-		$sufficient   = $expected > 0 && (
-			function_exists( 'bccomp' )
-				? bccomp( $balance_str, $expected_str, 18 ) >= 0
-				: $balance >= $expected
-		);
-
-		if ( $sufficient ) {
-			// Re-fetch fresh from DB to narrow race window (C-2)
-			$fresh = wc_get_order( $order->get_id() );
-			if ( in_array( $fresh->get_status(), array( 'processing', 'completed' ), true ) ) {
-				return array(
-					'status'   => 'confirmed',
-					'message'  => __( 'Payment confirmed.', 'forgelayer-crypto-payments-for-woocommerce' ),
-					'redirect' => $this->get_return_url( $fresh ),
-				);
-			}
-
-			$fresh->update_meta_data( '_fl_payment_status', 'confirmed' );
-			$fresh->save();
-			$fresh->payment_complete();
-
-			if ( $is_expired ) {
-				// Late payment within grace period, caught by cron (no webhook)
-				$fresh->add_order_note( sprintf(
-					__( 'ForgeLayer: LATE payment detected by cron (within grace period). Balance: %s. Order reopened automatically.', 'forgelayer-crypto-payments-for-woocommerce' ),
-					number_format( $balance, 8, '.', '' )
-				) );
-			} else {
-				$fresh->add_order_note( sprintf(
-					__( 'ForgeLayer: payment confirmed. Balance: %s', 'forgelayer-crypto-payments-for-woocommerce' ),
-					number_format( $balance, 8, '.', '' )
-				) );
-			}
-
-			return array(
-				'status'   => 'confirmed',
-				'message'  => __( 'Payment confirmed!', 'forgelayer-crypto-payments-for-woocommerce' ),
-				'redirect' => $this->get_return_url( $fresh ),
-			);
-		}
-
-		// balance and expected are intentionally NOT returned — the AJAX handler
-		// strips them before sending to unauthenticated clients (H-4)
-		// crypto_amount IS returned so the frontend can display it if it was
-		// empty at checkout time (price lookup may have been retried above)
+		// crypto_amount is returned so the payment page can display it if the
+		// price lookup was retried above after failing at checkout time.
 		return array(
-			'status'         => 'pending',
-			'message'        => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ),
-			'crypto_amount'  => $crypto_amount,
-			'token_symbol'   => $order->get_meta( '_fl_token_symbol' ),
+			'status'        => 'pending',
+			'message'       => __( 'Awaiting payment…', 'forgelayer-crypto-payments-for-woocommerce' ),
+			'crypto_amount' => $crypto_amount,
+			'token_symbol'  => $order->get_meta( '_fl_token_symbol' ),
 		);
 	}
 
